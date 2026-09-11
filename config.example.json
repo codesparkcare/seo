@@ -1,0 +1,46 @@
+{
+    "business": {
+        "name": "Codespark Software Development",
+        "category": "Software Company & Web Development",
+        "address": "Housing Board Colony, Melapalayam",
+        "city": "Tirunelveli",
+        "state": "Tamil Nadu",
+        "zip": "627005",
+        "phone": "+91 81108 99000",
+        "website": "https://codespark.online/",
+        "latitude": 8.7077,
+        "longitude": 77.7289,
+        "target_keywords": "Android App Development Company Tirunelveli, Near By App development company Tirunelveli, Near By Mobile App development company Tirunelveli, Internship Company Tirunelveli, IT company Tirunelveli, Software Company Tirunelveli, Best SEO Company Tirunelveli, Free Internship Company Tirunelveli, Web Development Company Tirunelveli, Billing Software Tirunelveli, Website Design Company Tirunelveli, Mobile App Developers in Tirunelveli, Custom Software Development Tirunelveli, Cloud Hosting Provider Tirunelveli, Digital Marketing Agency Tirunelveli, Best IT Solutions Tirunelveli, Software Training Institute Tirunelveli, Web Design Near Me Tirunelveli, E-commerce Website Development Tirunelveli, Top Software Internship Tirunelveli"
+    },
+    "google_oauth": {
+        "client_id": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+        "client_secret": "YOUR_GOOGLE_CLIENT_SECRET",
+        "redirect_uri": "http://localhost/SEO/api.php?action=gmb_callback",
+        "access_token": "",
+        "refresh_token": "",
+        "token_expires_at": 0,
+        "is_connected": false
+    },
+    "social_profiles": {
+        "facebook": "https://www.facebook.com/codesparksoftware/",
+        "instagram": "https://www.instagram.com/codesparksoftwaredevelopment/",
+        "youtube": "https://www.youtube.com/@CODESPARK-ek8fb",
+        "linkedin": "https://www.linkedin.com/company/codespark-software-development"
+    },
+    "settings": {
+        "openai_api_key": "",
+        "gemini_api_key": "",
+        "google_maps_api_key": "",
+        "wp_rest_url": "https://codespark.online/",
+        "wp_rest_username": "Codespark",
+        "wp_rest_app_password": "",
+        "wp_connected": false,
+        "rss_feed_url": "https://codespark.online/feed/",
+        "auto_syndicate_rss": true,
+        "last_synced_rss_item": "",
+        "ai_auto_respond_reviews": true,
+        "min_star_auto_respond": 4,
+        "last_auto_publish_date": ""
+    },
+    "posts": []
+}

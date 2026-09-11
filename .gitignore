@@ -1,0 +1,8 @@
+# Secrets and credentials
+config.json
+
+# Logs & Temporary files
+*.log
+.DS_Store
+.idea/
+.vscode/
