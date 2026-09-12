@@ -219,38 +219,69 @@ switch ($action) {
         $apiKey = $config['settings']['google_maps_api_key'] ?? '';
         $savedReplies = $config['review_replies'] ?? [];
         $manualReviews = $config['reviews'] ?? [];
+        $cachedGoogleReviews = $config['google_reviews_cache'] ?? [];
+        $totalGoogleRatings = 41;
+        $needsConfigSave = false;
 
-        $reviews = [];
-
-        // 1. Fetch live real reviews directly from Google Places API using verified Place ID
+        // 1. Check Google Places API (both most_relevant & newest to discover and accumulate reviews)
         if (!empty($placeId) && !empty($apiKey)) {
-            $url = "https://maps.googleapis.com/maps/api/place/details/json?place_id=" . urlencode($placeId) . "&fields=name,rating,user_ratings_total,reviews&key=" . urlencode($apiKey);
-            $ctx = stream_context_create(["http" => ["timeout" => 4]]);
-            $resp = @file_get_contents($url, false, $ctx);
-            if ($resp) {
-                $data = json_decode($resp, true);
-                if (($data['status'] ?? '') === 'OK' && !empty($data['result']['reviews'])) {
-                    foreach ($data['result']['reviews'] as $idx => $r) {
-                        $revId = abs(crc32($r['author_name'] . ($r['time'] ?? $idx)));
-                        $reply = $savedReplies[$revId] ?? null;
-                        $reviews[] = [
-                            'id' => $revId,
-                            'author_name' => $r['author_name'],
-                            'rating' => intval($r['rating'] ?? 5),
-                            'comment' => $r['text'] ?? '',
-                            'relative_time' => $r['relative_time_description'] ?? '',
-                            'profile_photo_url' => $r['profile_photo_url'] ?? '',
-                            'ai_reply' => $reply,
-                            'status' => !empty($reply) ? 'replied' : 'pending',
-                            'is_demo' => false,
-                            'source' => 'Google Maps'
-                        ];
+            $sorts = ['most_relevant', 'newest'];
+            foreach ($sorts as $sort) {
+                $url = "https://maps.googleapis.com/maps/api/place/details/json?place_id=" . urlencode($placeId) . "&fields=name,rating,user_ratings_total,reviews&reviews_sort=" . $sort . "&key=" . urlencode($apiKey);
+                $ctx = stream_context_create(["http" => ["timeout" => 4]]);
+                $resp = @file_get_contents($url, false, $ctx);
+                if ($resp) {
+                    $data = json_decode($resp, true);
+                    if (!empty($data['result']['user_ratings_total'])) {
+                        $totalGoogleRatings = intval($data['result']['user_ratings_total']);
+                    }
+                    if (($data['status'] ?? '') === 'OK' && !empty($data['result']['reviews'])) {
+                        foreach ($data['result']['reviews'] as $idx => $r) {
+                            $name = trim($r['author_name'] ?? '');
+                            if ($name && !isset($cachedGoogleReviews[$name])) {
+                                $cachedGoogleReviews[$name] = [
+                                    'author_name' => $name,
+                                    'rating' => intval($r['rating'] ?? 5),
+                                    'comment' => $r['text'] ?? '',
+                                    'relative_time' => $r['relative_time_description'] ?? '',
+                                    'profile_photo_url' => $r['profile_photo_url'] ?? '',
+                                    'time' => $r['time'] ?? time(),
+                                    'source' => 'Google Maps'
+                                ];
+                                $needsConfigSave = true;
+                            }
+                        }
                     }
                 }
             }
+
+            if ($needsConfigSave) {
+                $config['google_reviews_cache'] = $cachedGoogleReviews;
+                saveConfig($config);
+            }
         }
 
-        // 2. Prepend any manually added real customer reviews
+        $allReviews = [];
+
+        // Build list from cached Google reviews
+        foreach ($cachedGoogleReviews as $r) {
+            $revId = abs(crc32($r['author_name'] . ($r['time'] ?? '')));
+            $reply = $savedReplies[$revId] ?? null;
+            $allReviews[] = [
+                'id' => $revId,
+                'author_name' => $r['author_name'],
+                'rating' => intval($r['rating'] ?? 5),
+                'comment' => $r['comment'] ?? '',
+                'relative_time' => $r['relative_time'] ?? '',
+                'profile_photo_url' => $r['profile_photo_url'] ?? '',
+                'ai_reply' => $reply,
+                'status' => !empty($reply) ? 'replied' : 'pending',
+                'is_demo' => false,
+                'source' => 'Google Maps'
+            ];
+        }
+
+        // 2. Prepend any manually added real client reviews
         if (!empty($manualReviews)) {
             foreach ($manualReviews as &$mr) {
                 if (isset($savedReplies[$mr['id']])) {
@@ -258,12 +289,12 @@ switch ($action) {
                     $mr['status'] = 'replied';
                 }
             }
-            $reviews = array_merge($manualReviews, $reviews);
+            $allReviews = array_merge($manualReviews, $allReviews);
         }
 
-        // 3. If no real reviews found yet, fall back to sample demo reviews
-        if (empty($reviews)) {
-            $reviews = [
+        // 3. Fallback to sample demo reviews only if completely empty
+        if (empty($allReviews)) {
+            $allReviews = [
                 [
                     'id' => 1,
                     'author_name' => 'Karthik Raja [Sample Demo]',
@@ -294,7 +325,13 @@ switch ($action) {
             ];
         }
 
-        jsonResponse(['success' => true, 'reviews' => $reviews]);
+        jsonResponse([
+            'success' => true,
+            'reviews' => $allReviews,
+            'total_count' => count($allReviews),
+            'google_total_ratings' => $totalGoogleRatings,
+            'google_reviews_url' => 'https://search.google.com/local/reviews?placeid=' . urlencode($placeId)
+        ]);
         break;
 
     case 'add_review':

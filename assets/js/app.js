@@ -267,77 +267,34 @@ function renderGridMarkers(center, pins) {
     if (statEl) statEl.textContent = `${dominancePct}% (${top3Count}/${pins.length} Nodes in Top 3)`;
 }
 
-// 3. REVIEWS & AI AUTO-RESPONDER
+// 3. REVIEWS & AI AUTO-RESPONDER WITH FULL PAGINATION & SEARCH
+const ReviewState = {
+    allReviews: [],
+    filteredReviews: [],
+    currentPage: 1,
+    pageSize: 5,
+    googleTotalRatings: 41,
+    googleReviewsUrl: 'https://search.google.com/local/reviews?placeid=ChIJDR4_dxUTBDsReG0F-jMX19g'
+};
+
 async function loadReviews() {
     try {
         const res = await fetch('api.php?action=get_reviews');
         const data = await res.json();
         if (!data.success) return;
 
-        const tbody = document.getElementById('reviewsTableBody');
-        if (!tbody) return;
-
-        if (data.reviews.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-muted" style="text-align:center; padding: 24px;">No reviews logged yet.</td></tr>`;
-            return;
+        ReviewState.allReviews = data.reviews || [];
+        ReviewState.googleTotalRatings = data.google_total_ratings || 41;
+        if (data.google_reviews_url) {
+            ReviewState.googleReviewsUrl = data.google_reviews_url;
+            const viewAllBtn = document.getElementById('viewAllGoogleReviewsBtn');
+            if (viewAllBtn) {
+                viewAllBtn.href = data.google_reviews_url;
+                viewAllBtn.innerHTML = `<i class="fab fa-google"></i> View All ${ReviewState.googleTotalRatings} on Google <i class="fas fa-external-link-alt" style="font-size:10px; margin-left:2px;"></i>`;
+            }
         }
 
-        tbody.innerHTML = data.reviews.map(r => {
-            const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
-            const isReplied = r.status === 'replied';
-            const isDemo = !!r.is_demo;
-            const isGoogle = r.source === 'Google Maps';
-            const avatar = r.profile_photo_url ? `<img src="${escapeHtml(r.profile_photo_url)}" style="width:28px; height:28px; border-radius:50%; object-fit:cover;" alt="">` : `<div style="width:28px; height:28px; border-radius:50%; background:rgba(66,133,244,0.2); color:#4285F4; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold;">${escapeHtml(r.author_name.charAt(0))}</div>`;
-
-            return `
-                <tr>
-                    <td>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            ${avatar}
-                            <div>
-                                <div style="font-weight:600; font-size:0.9rem;">${escapeHtml(r.author_name)}</div>
-                                <div style="font-size:0.72rem; color:var(--text-dim); display:flex; align-items:center; gap:6px; margin-top:2px;">
-                                    ${r.relative_time ? `<span>${escapeHtml(r.relative_time)}</span> • ` : ''}
-                                    ${isGoogle ? `<span style="color:#4285F4;"><i class="fab fa-google"></i> Google Maps</span>` : (isDemo ? `<span style="background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:3px;">Sample Demo</span>` : `<span style="color:#10b981;"><i class="fas fa-check-circle"></i> Direct Client</span>`)}
-                                </div>
-                            </div>
-                        </div>
-                    </td>
-                    <td style="color: #F59E0B; font-size: 1rem; letter-spacing: 2px;">${stars}</td>
-                    <td style="max-width: 340px;">
-                        <div style="font-size: 0.85rem; line-height: 1.4;">${escapeHtml(r.comment || '')}</div>
-                        ${isReplied ? `
-                            <div style="margin-top: 6px; background: rgba(16,185,129,0.08); border-left: 3px solid var(--success); padding: 6px 10px; border-radius: 4px; font-size: 0.78rem; color: #A7F3D0;">
-                                <i class="fas fa-robot"></i> <strong>AI Local SEO Reply:</strong> ${escapeHtml(r.ai_reply)}
-                            </div>
-                        ` : ''}
-                    </td>
-                    <td>
-                        <span class="status-pill ${isReplied ? 'success' : 'warning'}">
-                            ${isReplied ? 'Synced to Google Maps' : 'Reply Pending'}
-                        </span>
-                    </td>
-                    <td>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            ${isReplied ? `
-                                <button class="btn btn-outline btn-sm" onclick="openReplyModal(${r.id}, '${escapeHtml(r.author_name)}', '${escapeHtml(r.comment || '')}', '${escapeHtml(r.ai_reply || '')}')">
-                                    <i class="fas fa-edit"></i> Edit Reply
-                                </button>
-                            ` : `
-                                <button class="btn btn-primary btn-sm" onclick="openReplyModal(${r.id}, '${escapeHtml(r.author_name)}', '${escapeHtml(r.comment || '')}', '')">
-                                    <i class="fas fa-magic"></i> Auto-Generate Reply
-                                </button>
-                            `}
-                            ${(!isDemo && !isGoogle) ? `
-                                <button class="btn btn-outline btn-sm" onclick="deleteCustomerReview(${r.id})" style="padding:4px 8px; color:#ef4444; border-color:rgba(239,68,68,0.3);" title="Remove review">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            ` : ''}
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
+        applyReviewFiltersAndRender();
 
         // Review Collection Link & QR Code
         let reviewUrl = '';
@@ -360,6 +317,186 @@ async function loadReviews() {
         updateReviewQrLive(reviewUrl);
     } catch (e) {
         console.error('Error loading reviews:', e);
+    }
+}
+
+function handleReviewFilterChange() {
+    ReviewState.currentPage = 1;
+    applyReviewFiltersAndRender();
+}
+
+function handleReviewPageSizeChange() {
+    const val = document.getElementById('reviewPageSize')?.value || '5';
+    ReviewState.pageSize = (val === 'all') ? 'all' : parseInt(val);
+    ReviewState.currentPage = 1;
+    applyReviewFiltersAndRender();
+}
+
+function applyReviewFiltersAndRender() {
+    const search = (document.getElementById('reviewSearchInput')?.value || '').toLowerCase().trim();
+    const ratingFilter = document.getElementById('reviewRatingFilter')?.value || 'all';
+    const statusFilter = document.getElementById('reviewStatusFilter')?.value || 'all';
+
+    ReviewState.filteredReviews = ReviewState.allReviews.filter(r => {
+        // Search filter (author name or review text or reply)
+        if (search) {
+            const author = (r.author_name || '').toLowerCase();
+            const comment = (r.comment || '').toLowerCase();
+            const reply = (r.ai_reply || '').toLowerCase();
+            if (!author.includes(search) && !comment.includes(search) && !reply.includes(search)) {
+                return false;
+            }
+        }
+
+        // Star rating filter
+        if (ratingFilter !== 'all') {
+            if (r.rating !== parseInt(ratingFilter)) return false;
+        }
+
+        // Status filter
+        if (statusFilter !== 'all') {
+            if (r.status !== statusFilter) return false;
+        }
+
+        return true;
+    });
+
+    renderReviewsTable();
+}
+
+function changeReviewPage(page) {
+    const total = ReviewState.filteredReviews.length;
+    const limit = ReviewState.pageSize === 'all' ? total : ReviewState.pageSize;
+    const maxPage = Math.max(1, Math.ceil(total / limit));
+
+    if (page < 1 || page > maxPage) return;
+    ReviewState.currentPage = page;
+    renderReviewsTable();
+}
+
+function renderReviewsTable() {
+    const tbody = document.getElementById('reviewsTableBody');
+    const countInfo = document.getElementById('reviewsCountInfo');
+    const controls = document.getElementById('reviewsPaginationControls');
+    if (!tbody) return;
+
+    const total = ReviewState.filteredReviews.length;
+
+    if (total === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-muted" style="text-align:center; padding: 28px;">No reviews matched your search filter.</td></tr>`;
+        if (countInfo) countInfo.textContent = `Showing 0 reviews (${ReviewState.allReviews.length} available, ${ReviewState.googleTotalRatings} on Google Maps)`;
+        if (controls) controls.innerHTML = '';
+        return;
+    }
+
+    // Determine slice range
+    let startIdx = 0;
+    let endIdx = total;
+    let totalPages = 1;
+
+    if (ReviewState.pageSize !== 'all') {
+        const limit = ReviewState.pageSize;
+        totalPages = Math.ceil(total / limit);
+        if (ReviewState.currentPage > totalPages) ReviewState.currentPage = totalPages;
+        startIdx = (ReviewState.currentPage - 1) * limit;
+        endIdx = Math.min(startIdx + limit, total);
+    }
+
+    const pageReviews = ReviewState.filteredReviews.slice(startIdx, endIdx);
+
+    tbody.innerHTML = pageReviews.map(r => {
+        const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+        const isReplied = r.status === 'replied';
+        const isDemo = !!r.is_demo;
+        const isGoogle = r.source === 'Google Maps';
+        const avatar = r.profile_photo_url ? `<img src="${escapeHtml(r.profile_photo_url)}" style="width:28px; height:28px; border-radius:50%; object-fit:cover;" alt="">` : `<div style="width:28px; height:28px; border-radius:50%; background:rgba(66,133,244,0.2); color:#4285F4; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold;">${escapeHtml(r.author_name.charAt(0))}</div>`;
+
+        return `
+            <tr>
+                <td>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        ${avatar}
+                        <div>
+                            <div style="font-weight:600; font-size:0.9rem;">${escapeHtml(r.author_name)}</div>
+                            <div style="font-size:0.72rem; color:var(--text-dim); display:flex; align-items:center; gap:6px; margin-top:2px;">
+                                ${r.relative_time ? `<span>${escapeHtml(r.relative_time)}</span> • ` : ''}
+                                ${isGoogle ? `<span style="color:#4285F4;"><i class="fab fa-google"></i> Google Maps</span>` : (isDemo ? `<span style="background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:3px;">Sample Demo</span>` : `<span style="color:#10b981;"><i class="fas fa-check-circle"></i> Direct Client</span>`)}
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td style="color: #F59E0B; font-size: 1rem; letter-spacing: 2px;">${stars}</td>
+                <td style="max-width: 340px;">
+                    <div style="font-size: 0.85rem; line-height: 1.4;">${escapeHtml(r.comment || '')}</div>
+                    ${isReplied ? `
+                        <div style="margin-top: 6px; background: rgba(16,185,129,0.08); border-left: 3px solid var(--success); padding: 6px 10px; border-radius: 4px; font-size: 0.78rem; color: #A7F3D0;">
+                            <i class="fas fa-robot"></i> <strong>AI Local SEO Reply:</strong> ${escapeHtml(r.ai_reply)}
+                        </div>
+                    ` : ''}
+                </td>
+                <td>
+                    <span class="status-pill ${isReplied ? 'success' : 'warning'}">
+                        ${isReplied ? 'Synced to Google Maps' : 'Reply Pending'}
+                    </span>
+                </td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        ${isReplied ? `
+                            <button class="btn btn-outline btn-sm" onclick="openReplyModal(${r.id}, '${escapeHtml(r.author_name)}', '${escapeHtml(r.comment || '')}', '${escapeHtml(r.ai_reply || '')}')">
+                                <i class="fas fa-edit"></i> Edit Reply
+                            </button>
+                        ` : `
+                            <button class="btn btn-primary btn-sm" onclick="openReplyModal(${r.id}, '${escapeHtml(r.author_name)}', '${escapeHtml(r.comment || '')}', '')">
+                                <i class="fas fa-magic"></i> Auto-Generate Reply
+                            </button>
+                        `}
+                        ${(!isDemo && !isGoogle) ? `
+                            <button class="btn btn-outline btn-sm" onclick="deleteCustomerReview(${r.id})" style="padding:4px 8px; color:#ef4444; border-color:rgba(239,68,68,0.3);" title="Remove review">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    // Update count info
+    if (countInfo) {
+        const fromNum = startIdx + 1;
+        const toNum = endIdx;
+        countInfo.innerHTML = `Showing <strong>${fromNum}–${toNum}</strong> of <strong>${total}</strong> reviews (${ReviewState.googleTotalRatings} verified on Google Maps)`;
+    }
+
+    // Render pagination buttons
+    if (controls) {
+        if (totalPages <= 1) {
+            controls.innerHTML = '';
+            return;
+        }
+
+        let btnsHtml = `
+            <button class="btn btn-outline btn-sm" style="padding:4px 10px; font-size:0.8rem;" onclick="changeReviewPage(${ReviewState.currentPage - 1})" ${ReviewState.currentPage === 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''}>
+                <i class="fas fa-chevron-left"></i> Prev
+            </button>
+        `;
+
+        for (let p = 1; p <= totalPages; p++) {
+            const isActive = p === ReviewState.currentPage;
+            btnsHtml += `
+                <button class="btn ${isActive ? 'btn-primary' : 'btn-outline'} btn-sm" style="padding:4px 10px; font-size:0.8rem; min-width:32px;" onclick="changeReviewPage(${p})">
+                    ${p}
+                </button>
+            `;
+        }
+
+        btnsHtml += `
+            <button class="btn btn-outline btn-sm" style="padding:4px 10px; font-size:0.8rem;" onclick="changeReviewPage(${ReviewState.currentPage + 1})" ${ReviewState.currentPage === totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''}>
+                Next <i class="fas fa-chevron-right"></i>
+            </button>
+        `;
+
+        controls.innerHTML = btnsHtml;
     }
 }
 

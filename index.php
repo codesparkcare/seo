@@ -366,9 +366,42 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                         <h3><i class="fas fa-comments" style="color: #FBBF24;"></i> Incoming Customer Reviews</h3>
                         <p>Google prioritizes business profiles that respond quickly with localized service keywords.</p>
                     </div>
-                    <div style="display:flex; gap: 8px;">
+                    <div style="display:flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+                        <a id="viewAllGoogleReviewsBtn" href="https://search.google.com/local/reviews?placeid=ChIJDR4_dxUTBDsReG0F-jMX19g" target="_blank" class="btn btn-outline btn-sm" style="color: #4285F4; border-color: rgba(66,133,244,0.4);">
+                            <i class="fab fa-google"></i> View All 41 on Google <i class="fas fa-external-link-alt" style="font-size: 10px; margin-left: 2px;"></i>
+                        </a>
                         <button class="btn btn-primary btn-sm" onclick="openAddReviewModal()"><i class="fas fa-plus"></i> Add Real Review</button>
                         <button class="btn btn-outline btn-sm" onclick="loadReviews()"><i class="fas fa-sync"></i> Refresh</button>
+                    </div>
+                </div>
+
+                <!-- Review Filter & Pagination Toolbar -->
+                <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 12px 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; flex: 1; min-width: 280px;">
+                        <div style="position: relative; flex: 1; min-width: 200px;">
+                            <i class="fas fa-search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 0.8rem;"></i>
+                            <input type="text" id="reviewSearchInput" class="form-control" placeholder="Search by customer name or keywords..." style="padding-left: 32px; font-size: 0.85rem; height: 36px;" oninput="handleReviewFilterChange()">
+                        </div>
+                        <select id="reviewRatingFilter" class="form-control" style="width: auto; font-size: 0.85rem; height: 36px;" onchange="handleReviewFilterChange()">
+                            <option value="all">All Star Ratings</option>
+                            <option value="5">★★★★★ (5 Stars)</option>
+                            <option value="4">★★★★☆ (4 Stars)</option>
+                            <option value="3">★★★☆☆ (3 Stars)</option>
+                        </select>
+                        <select id="reviewStatusFilter" class="form-control" style="width: auto; font-size: 0.85rem; height: 36px;" onchange="handleReviewFilterChange()">
+                            <option value="all">All Reply Statuses</option>
+                            <option value="pending">Reply Pending</option>
+                            <option value="replied">Synced to Google Maps</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <span style="font-size: 0.8rem; color: var(--text-dim);">Show:</span>
+                        <select id="reviewPageSize" class="form-control" style="width: auto; font-size: 0.85rem; height: 36px;" onchange="handleReviewPageSizeChange()">
+                            <option value="5" selected>5 per page</option>
+                            <option value="10">10 per page</option>
+                            <option value="25">25 per page</option>
+                            <option value="all">Show All</option>
+                        </select>
                     </div>
                 </div>
 
@@ -387,6 +420,16 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                             <tr><td colspan="5" class="text-muted" style="text-align:center; padding: 24px;">Loading customer reviews...</td></tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Pagination Footer Bar -->
+                <div id="reviewsPaginationBar" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-color); gap: 12px;">
+                    <div id="reviewsCountInfo" style="font-size: 0.85rem; color: var(--text-dim);">
+                        Loading review count...
+                    </div>
+                    <div id="reviewsPaginationControls" style="display: flex; gap: 6px; align-items: center;">
+                        <!-- Rendered by app.js -->
+                    </div>
                 </div>
             </div>
         </section>
