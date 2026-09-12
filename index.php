@@ -719,33 +719,6 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                     </div>
             </div>
 
-            <!-- Citations & Directory Consistency Checker -->
-            <div class="card">
-                <div class="card-header">
-                    <div>
-                        <h3><i class="fas fa-address-book" style="color: var(--secondary);"></i> Local Directory Citations & NAP Consistency</h3>
-                        <p>Google heavily checks NAP (Name, Address, Phone) consistency across directories to verify your office location.</p>
-                    </div>
-                </div>
-
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Directory Platform</th>
-                                <th>Profile Link</th>
-                                <th>Authority</th>
-                                <th>NAP Match Status</th>
-                                <th>Audit Notes</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="citationsTableBody">
-                            <tr><td colspan="6" class="text-muted" style="text-align:center; padding: 20px;">Loading citations audit...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
             <!-- Published & Scheduled Posts List -->
             <div class="card">
