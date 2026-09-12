@@ -1369,18 +1369,15 @@ async function publishGmbUpdate() {
             loadPosts();
             loadOverview();
 
-            if (data.google_quota_restricted) {
-                openGmbPublishAssistant({
-                    headline,
-                    content,
-                    cta_type: ctaType,
-                    cta_url: ctaUrl,
-                    image_url: imageUrl
-                });
-                showToast('Post content copied to clipboard! Click to publish on Google.', 'info');
-            } else {
-                showToast(data.message || 'Update published directly to Google Business Profile!', 'success');
-            }
+            // Always open the 1-Click Google Assistant popup after publish
+            openGmbPublishAssistant({
+                headline,
+                content,
+                cta_type: ctaType,
+                cta_url: ctaUrl,
+                image_url: imageUrl
+            });
+            showToast('Post published! Google Assistant popup opened & ready to paste.', 'success');
         } else {
             showToast(data.error || 'Failed to publish update', 'error');
         }
@@ -1392,6 +1389,42 @@ async function publishGmbUpdate() {
             btn.innerHTML = origHtml;
         }
     }
+}
+
+function openCurrentPostInAssistant() {
+    const headline = document.getElementById('postTitleInput')?.value?.trim() || '';
+    const content = document.getElementById('postBodyInput')?.value?.trim() || '';
+    const ctaType = document.getElementById('gmbButtonTypeSelect')?.value || 'LEARN_MORE';
+    const ctaUrl = document.getElementById('gmbButtonUrlInput')?.value?.trim() || '';
+    const imageUrl = document.getElementById('gmbImageUrlInput')?.value?.trim() || '';
+
+    if (!headline && !content) {
+        showToast('Please enter a headline or generate post content first.', 'warning');
+        document.getElementById('postTitleInput')?.focus();
+        return;
+    }
+
+    openGmbPublishAssistant({
+        headline,
+        content,
+        cta_type: ctaType,
+        cta_url: ctaUrl,
+        image_url: imageUrl
+    });
+    showToast('Google Assistant popup opened & copied to clipboard!', 'success');
+}
+
+function openGmbAssistantForUpdate(idx) {
+    const post = GmbState.updates[idx];
+    if (!post) return;
+    openGmbPublishAssistant({
+        headline: post.headline || '',
+        content: post.content || '',
+        cta_type: post.cta_type || 'LEARN_MORE',
+        cta_url: post.cta_url || '',
+        image_url: post.image_url || ''
+    });
+    showToast('Post text copied to clipboard & Google Assistant popup opened!', 'success');
 }
 
 function openGmbPublishAssistant(post) {
@@ -1528,6 +1561,9 @@ function renderGmbUpdatesList() {
                     </div>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+                    <button class="btn btn-outline btn-sm" onclick="openGmbAssistantForUpdate(${actualIdx})" style="color: #60a5fa; border-color: rgba(96, 165, 250, 0.4); font-size: 0.75rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;" title="Open Google Business Profile Assistant for this post">
+                        <i class="fab fa-google"></i> Open Popup ↗
+                    </button>
                     <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" onclick="window.open('${mapsUrl}', '_blank'); return false;" class="btn btn-outline btn-sm" style="color: #4285F4; border-color: rgba(66, 133, 244, 0.4); font-size: 0.75rem; text-decoration: none; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;" title="Open Codespark on Google Maps">
                         <i class="fas fa-map-marked-alt"></i> View on Maps ↗
                     </a>

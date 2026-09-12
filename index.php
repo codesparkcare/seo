@@ -944,10 +944,16 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                             <input type="checkbox" id="gmbSyndicateWp" checked style="accent-color: var(--primary);">
                             <span>Also publish to WordPress (codespark.online)</span>
                         </label>
-                        <button class="btn btn-success" id="btnPublishGmb" onclick="publishGmbUpdate()" style="background: linear-gradient(135deg, #10B981, #059669); font-weight: 600; padding: 10px 24px; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); display: inline-flex; align-items: center; gap: 8px;">
-                            <i class="fab fa-google"></i>
-                            <span>Publish to Google Business Profile</span>
-                        </button>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-outline" onclick="openCurrentPostInAssistant()" style="border-color: rgba(66, 133, 244, 0.4); color: #60a5fa; font-weight: 500; padding: 10px 18px; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px;" title="Open Assistant popup with current post data">
+                                <i class="fab fa-google"></i>
+                                <span>Open Assistant Popup</span>
+                            </button>
+                            <button class="btn btn-success" id="btnPublishGmb" onclick="publishGmbUpdate()" style="background: linear-gradient(135deg, #10B981, #059669); font-weight: 600; padding: 10px 24px; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fab fa-google"></i>
+                                <span>Publish to Google Business Profile</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
