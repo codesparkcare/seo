@@ -1074,6 +1074,12 @@ Return ONLY JSON.";
         }
         break;
 
+    case 'clear_gmb_updates':
+        $config['gmb_updates'] = [];
+        saveConfig($config);
+        jsonResponse(['success' => true, 'message' => 'All Google Map updates cleared successfully.']);
+        break;
+
     case 'generate_gmb_update':
         $topic = trim($params['topic'] ?? '');
         $city = $config['business']['city'] ?? 'Tirunelveli';

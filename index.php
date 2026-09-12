@@ -1031,13 +1031,35 @@ At Codespark Software Development, we build high-performance mobile apps, digita
                         </h3>
                         <p style="font-size: 0.8rem; margin: 2px 0 0;">Recent updates posted to Codespark's Google Business Profile feed.</p>
                     </div>
-                    <button class="btn btn-outline btn-sm" onclick="loadGmbUpdates()" style="border-color: rgba(255,255,255,0.15); color: var(--text-muted);">
-                        <i class="fas fa-sync-alt"></i> Refresh Feed
-                    </button>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <button class="btn btn-outline btn-sm" onclick="loadGmbUpdates()" style="border-color: rgba(255,255,255,0.15); color: var(--text-muted);">
+                            <i class="fas fa-sync-alt"></i> Refresh Feed
+                        </button>
+                        <button class="btn btn-outline btn-sm" id="btnClearGmbUpdates" onclick="clearGmbUpdates()" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.4); font-size: 0.78rem; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-trash-alt"></i> Clear All Updates
+                        </button>
+                    </div>
                 </div>
                 <div id="gmbPublishedUpdatesFeed">
                     <div style="text-align: center; padding: 30px; color: var(--text-dim);">
                         <i class="fas fa-spinner fa-spin"></i> Loading updates feed...
+                    </div>
+                </div>
+                <!-- Pagination Controls for Google Map Updates -->
+                <div id="gmbUpdatesPaginationWrap" style="display: none; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-color);">
+                    <div id="gmbPaginationCount" style="font-size: 0.8rem; color: var(--text-muted);">
+                        Showing updates...
+                    </div>
+                    <div style="display:flex; align-items:center; gap: 12px;">
+                        <div style="display:flex; align-items:center; gap: 6px; font-size: 0.78rem; color: var(--text-dim);">
+                            <span>Show:</span>
+                            <select id="gmbPerPageSelect" class="form-control" style="padding: 2px 8px; font-size: 0.75rem; width: auto; height: 30px;" onchange="changeGmbPerPage(this.value)">
+                                <option value="3" selected>3 per page</option>
+                                <option value="5">5 per page</option>
+                                <option value="10">10 per page</option>
+                            </select>
+                        </div>
+                        <div id="gmbPaginationControls" style="display:flex; gap: 6px; align-items: center;"></div>
                     </div>
                 </div>
             </div>

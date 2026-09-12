@@ -1447,6 +1447,12 @@ function copyGmbAssistantImage() {
     }
 }
 
+const GmbState = {
+    updates: [],
+    currentPage: 1,
+    perPage: 3
+};
+
 async function loadGmbUpdates() {
     const container = document.getElementById('gmbPublishedUpdatesFeed');
     if (!container) return;
@@ -1454,52 +1460,155 @@ async function loadGmbUpdates() {
     try {
         const res = await fetch('api.php?action=get_gmb_updates');
         const data = await res.json();
+        GmbState.updates = (data.success && Array.isArray(data.updates)) ? data.updates : [];
+        renderGmbUpdatesList();
+    } catch (e) {
+        container.innerHTML = `<div style="padding: 20px; color: #ef4444; text-align: center;">Error loading updates feed.</div>`;
+    }
+}
 
-        if (!data.success || !data.updates || data.updates.length === 0) {
-            container.innerHTML = `
-                <div style="text-align: center; padding: 36px 20px; color: var(--text-dim);">
-                    <i class="fab fa-google" style="font-size: 2.2rem; margin-bottom: 12px; color: #4285F4; opacity: 0.6;"></i>
-                    <p style="font-size: 0.9rem; margin: 0;">No updates published yet. Create and publish your first Google Maps update above!</p>
+function changeGmbPerPage(newVal) {
+    GmbState.perPage = parseInt(newVal, 10) || 3;
+    GmbState.currentPage = 1;
+    renderGmbUpdatesList();
+}
+
+function changeGmbUpdatesPage(newPage) {
+    GmbState.currentPage = newPage;
+    renderGmbUpdatesList();
+    document.getElementById('gmbPublishedUpdatesFeed')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderGmbUpdatesList() {
+    const container = document.getElementById('gmbPublishedUpdatesFeed');
+    const wrap = document.getElementById('gmbUpdatesPaginationWrap');
+    const countEl = document.getElementById('gmbPaginationCount');
+    const controls = document.getElementById('gmbPaginationControls');
+    if (!container) return;
+
+    const total = GmbState.updates.length;
+    if (total === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 36px 20px; color: var(--text-dim);">
+                <i class="fab fa-google" style="font-size: 2.2rem; margin-bottom: 12px; color: #4285F4; opacity: 0.6;"></i>
+                <p style="font-size: 0.9rem; margin: 0;">No updates published yet. Create and publish your first Google Maps update above!</p>
+            </div>
+        `;
+        if (wrap) wrap.style.display = 'none';
+        return;
+    }
+
+    const totalPages = Math.ceil(total / GmbState.perPage) || 1;
+    if (GmbState.currentPage > totalPages) GmbState.currentPage = totalPages;
+    if (GmbState.currentPage < 1) GmbState.currentPage = 1;
+
+    const startIdx = (GmbState.currentPage - 1) * GmbState.perPage;
+    const endIdx = Math.min(startIdx + GmbState.perPage, total);
+    const pageItems = GmbState.updates.slice(startIdx, endIdx);
+
+    container.innerHTML = pageItems.map((u, i) => {
+        const actualIdx = startIdx + i;
+        const timeStr = u.published_at ? new Date(u.published_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recently';
+        const imgHtml = u.image_url ? `<img src="${u.image_url}" class="gmb-history-thumb" alt="Update Image" onerror="this.style.display='none'">` : `<div class="gmb-history-thumb" style="display:flex;align-items:center;justify-content:center;background:#1E293B;color:#4285F4;"><i class="fab fa-google"></i></div>`;
+        let mapsUrl = u.maps_url || '';
+        if (!mapsUrl || mapsUrl.includes('4452102759555494648')) {
+            mapsUrl = 'https://www.google.com/maps/search/?api=1&query=Codespark+Software+Development+Melapalayam+Tirunelveli&query_place_id=ChIJDR4_dxUTBDsReG0F-jMX19g';
+        }
+
+        return `
+            <div class="gmb-history-card">
+                ${imgHtml}
+                <div class="gmb-history-content">
+                    <div class="gmb-history-headline">${escapeHtml(u.headline || 'Google Maps Update')}</div>
+                    <div class="gmb-history-snippet">${escapeHtml(u.content || '')}</div>
+                    <div class="gmb-history-meta">
+                        <span><i class="far fa-clock"></i> ${timeStr}</span>
+                        <span class="status-pill success" style="font-size: 0.7rem;"><i class="fas fa-check-circle"></i> Live on Google Profile</span>
+                        ${u.cta_url ? `<span style="color: #60a5fa;"><i class="fas fa-link"></i> ${escapeHtml(u.cta_type || 'Button')}: <a href="${u.cta_url}" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: underline;">${escapeHtml(u.cta_url)}</a></span>` : ''}
+                    </div>
                 </div>
-            `;
+                <div style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+                    <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" onclick="window.open('${mapsUrl}', '_blank'); return false;" class="btn btn-outline btn-sm" style="color: #4285F4; border-color: rgba(66, 133, 244, 0.4); font-size: 0.75rem; text-decoration: none; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;" title="Open Codespark on Google Maps">
+                        <i class="fas fa-map-marked-alt"></i> View on Maps ↗
+                    </a>
+                    ${u.wp_link ? `<a href="${u.wp_link}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); font-size: 0.75rem; text-decoration: none; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;"><i class="fab fa-wordpress"></i> Blog Link ↗</a>` : ''}
+                    <button class="btn btn-outline btn-sm" onclick="deleteGmbUpdate('${u.id || ''}', ${actualIdx})" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3); font-size: 0.75rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    if (wrap) wrap.style.display = 'flex';
+    if (countEl) {
+        countEl.innerHTML = `Showing <strong>${startIdx + 1}–${endIdx}</strong> of <strong>${total}</strong> published updates`;
+    }
+
+    if (controls) {
+        if (totalPages <= 1) {
+            controls.innerHTML = '';
             return;
         }
 
-        container.innerHTML = data.updates.map((u, idx) => {
-            const timeStr = u.published_at ? new Date(u.published_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recently';
-            const imgHtml = u.image_url ? `<img src="${u.image_url}" class="gmb-history-thumb" alt="Update Image" onerror="this.style.display='none'">` : `<div class="gmb-history-thumb" style="display:flex;align-items:center;justify-content:center;background:#1E293B;color:#4285F4;"><i class="fab fa-google"></i></div>`;
-            let mapsUrl = u.maps_url || '';
-            if (!mapsUrl || mapsUrl.includes('4452102759555494648')) {
-                mapsUrl = 'https://www.google.com/maps/search/?api=1&query=Codespark+Software+Development+Melapalayam+Tirunelveli&query_place_id=ChIJDR4_dxUTBDsReG0F-jMX19g';
-            }
+        let btnsHtml = `
+            <button class="btn btn-outline btn-sm" style="padding:4px 10px; font-size:0.75rem;" onclick="changeGmbUpdatesPage(${GmbState.currentPage - 1})" ${GmbState.currentPage === 1 ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''}>
+                <i class="fas fa-chevron-left"></i> Prev
+            </button>
+        `;
 
-            return `
-                <div class="gmb-history-card">
-                    ${imgHtml}
-                    <div class="gmb-history-content">
-                        <div class="gmb-history-headline">${escapeHtml(u.headline || 'Google Maps Update')}</div>
-                        <div class="gmb-history-snippet">${escapeHtml(u.content || '')}</div>
-                        <div class="gmb-history-meta">
-                            <span><i class="far fa-clock"></i> ${timeStr}</span>
-                            <span class="status-pill success" style="font-size: 0.7rem;"><i class="fas fa-check-circle"></i> Live on Google Profile</span>
-                            ${u.cta_url ? `<span style="color: #60a5fa;"><i class="fas fa-link"></i> ${escapeHtml(u.cta_type || 'Button')}: <a href="${u.cta_url}" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: underline;">${escapeHtml(u.cta_url)}</a></span>` : ''}
-                        </div>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
-                        <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" onclick="window.open('${mapsUrl}', '_blank'); return false;" class="btn btn-outline btn-sm" style="color: #4285F4; border-color: rgba(66, 133, 244, 0.4); font-size: 0.75rem; text-decoration: none; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;" title="Open Codespark on Google Maps">
-                            <i class="fas fa-map-marked-alt"></i> View on Maps ↗
-                        </a>
-                        ${u.wp_link ? `<a href="${u.wp_link}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); font-size: 0.75rem; text-decoration: none; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;"><i class="fab fa-wordpress"></i> Blog Link ↗</a>` : ''}
-                        <button class="btn btn-outline btn-sm" onclick="deleteGmbUpdate('${u.id || ''}', ${idx})" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3); font-size: 0.75rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;">
-                            <i class="fas fa-trash-alt"></i> Delete
-                        </button>
-                    </div>
-                </div>
+        for (let p = 1; p <= totalPages; p++) {
+            const isActive = p === GmbState.currentPage;
+            btnsHtml += `
+                <button class="btn ${isActive ? 'btn-primary' : 'btn-outline'} btn-sm" style="padding:4px 10px; font-size:0.75rem; min-width:32px; ${isActive ? 'font-weight:700;' : ''}" onclick="changeGmbUpdatesPage(${p})">
+                    ${p}
+                </button>
             `;
-        }).join('');
+        }
 
+        btnsHtml += `
+            <button class="btn btn-outline btn-sm" style="padding:4px 10px; font-size:0.75rem;" onclick="changeGmbUpdatesPage(${GmbState.currentPage + 1})" ${GmbState.currentPage === totalPages ? 'disabled style="opacity:0.4; cursor:not-allowed;"' : ''}>
+                Next <i class="fas fa-chevron-right"></i>
+            </button>
+        `;
+
+        controls.innerHTML = btnsHtml;
+    }
+}
+
+async function clearGmbUpdates() {
+    if (!confirm('Are you sure you want to clear all published Google Map updates from this feed?')) {
+        return;
+    }
+
+    const btn = document.getElementById('btnClearGmbUpdates');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Clearing...';
+    }
+
+    try {
+        const res = await fetch('api.php?action=clear_gmb_updates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(data.message || 'All Google Map updates cleared successfully!', 'success');
+            GmbState.updates = [];
+            GmbState.currentPage = 1;
+            renderGmbUpdatesList();
+        } else {
+            showToast(data.error || 'Failed to clear updates', 'error');
+        }
     } catch (e) {
-        container.innerHTML = `<div style="padding: 20px; color: #ef4444; text-align: center;">Error loading updates feed.</div>`;
+        showToast('Network error clearing updates', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
     }
 }
 
