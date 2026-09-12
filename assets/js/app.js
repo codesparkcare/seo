@@ -1039,8 +1039,11 @@ async function loadPosts() {
                                 <span style="color: var(--text-dim);">Platforms:</span> 
                                 ${(platforms || []).map(pl => `<span class="status-pill primary" style="font-size: 0.7rem; text-transform: uppercase;"><i class="fab fa-${pl === 'gmb' ? 'google' : (pl === 'wordpress' ? 'wordpress' : pl)}"></i> ${pl}</span>`).join(' ')}
                             </div>
-                            <div style="display:flex; align-items: center; gap: 8px;">
+                            <div style="display:flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 ${wpLinkHtml}
+                                <button class="btn btn-outline btn-sm" onclick="copyPostAndOpenGmb(${idx})" style="padding: 4px 8px; font-size: 0.75rem; color: #4285F4; border-color: rgba(66,133,244,0.4);" title="Copy text & Post update to Google Business Profile">
+                                    <i class="fab fa-google"></i> Google Update ↗
+                                </button>
                                 <a href="${fbUrl}" target="_blank" class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 0.75rem; color: #1877F2; border-color: rgba(24,119,242,0.3);" title="Share to Facebook">
                                     <i class="fab fa-facebook-f"></i> Share
                                 </a>
@@ -1121,6 +1124,20 @@ async function deletePostEntry(index) {
     } catch (e) {
         showToast('Network error deleting post', 'error');
     }
+}
+
+function copyPostAndOpenGmb(idx) {
+    const post = (AppState.posts || [])[idx];
+    if (!post) return;
+    const textToCopy = (post.title ? post.title + "\n\n" : '') + (post.content || '');
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        showToast('Post text copied to clipboard! Opening Google Search for Codespark...', 'success');
+        setTimeout(() => {
+            window.open('https://www.google.com/search?q=Codespark+Software+Development+Melapalayam', '_blank');
+        }, 400);
+    }).catch(() => {
+        window.open('https://www.google.com/search?q=Codespark+Software+Development+Melapalayam', '_blank');
+    });
 }
 
 async function generateAiPostBody() {
