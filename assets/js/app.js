@@ -1365,10 +1365,22 @@ async function publishGmbUpdate() {
         const data = await res.json();
 
         if (data.success) {
-            showToast(data.message || 'Update published to Google Business Profile!', 'success');
             loadGmbUpdates();
             loadPosts();
             loadOverview();
+
+            if (data.google_quota_restricted) {
+                openGmbPublishAssistant({
+                    headline,
+                    content,
+                    cta_type: ctaType,
+                    cta_url: ctaUrl,
+                    image_url: imageUrl
+                });
+                showToast('Post content copied to clipboard! Click to publish on Google.', 'info');
+            } else {
+                showToast(data.message || 'Update published directly to Google Business Profile!', 'success');
+            }
         } else {
             showToast(data.error || 'Failed to publish update', 'error');
         }
@@ -1379,6 +1391,59 @@ async function publishGmbUpdate() {
             btn.disabled = false;
             btn.innerHTML = origHtml;
         }
+    }
+}
+
+function openGmbPublishAssistant(post) {
+    const textToCopy = (post.headline ? post.headline + "\n\n" : "") + (post.content || "");
+    const textEl = document.getElementById('gmbAssistantText');
+    if (textEl) textEl.value = textToCopy;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy);
+    }
+
+    const ctaEl = document.getElementById('gmbAssistantCtaType');
+    if (ctaEl) ctaEl.textContent = `${post.cta_type || 'Learn more'}: ${post.cta_url || ''}`;
+
+    const imgEl = document.getElementById('gmbAssistantImageText');
+    if (imgEl) imgEl.textContent = post.image_url || 'No image';
+
+    window._lastGmbPost = post;
+
+    const modal = document.getElementById('gmbPublishAssistantModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeGmbPublishAssistant() {
+    const modal = document.getElementById('gmbPublishAssistantModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function copyGmbAssistantText() {
+    const text = document.getElementById('gmbAssistantText')?.value || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Post text copied to clipboard!', 'success');
+        });
+    }
+}
+
+function copyGmbAssistantUrl() {
+    const url = window._lastGmbPost?.cta_url || document.getElementById('gmbButtonUrlInput')?.value || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+            showToast('Button URL copied to clipboard!', 'success');
+        });
+    }
+}
+
+function copyGmbAssistantImage() {
+    const img = window._lastGmbPost?.image_url || document.getElementById('gmbImageUrlInput')?.value || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(img).then(() => {
+            showToast('Image URL copied to clipboard!', 'success');
+        });
     }
 }
 

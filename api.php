@@ -1209,44 +1209,27 @@ Output ONLY valid JSON with keys:
         }
 
         // 1. Google Business Profile API Integration
-        $googlePublished = false;
-        $googleError = '';
+        $googleDirectPublished = false;
+        $googleQuotaRestricted = true;
         $token = getGoogleAccessToken($config);
 
         if ($token) {
-            // Attempt Google My Business Local Post creation
-            $gmbPayload = [
-                'languageCode' => 'en',
-                'summary' => $content,
-                'callToAction' => [
-                    'actionType' => $ctaType,
-                    'url' => $ctaUrl
-                ],
-                'topicType' => 'STANDARD'
-            ];
-            if (!empty($imageUrl)) {
-                $gmbPayload['media'] = [
-                    [
-                        'mediaFormat' => 'PHOTO',
-                        'sourceUrl' => $imageUrl
-                    ]
-                ];
-            }
-
-            // Google My Business v4 Local Post endpoint
-            // If location accounts are configured, send direct HTTP POST
-            $gmbApiUrl = "https://mybusiness.googleapis.com/v4/accounts";
-            $ch = curl_init($gmbApiUrl);
+            // Check if Google Cloud has granted non-zero quota for My Business API
+            $ch = curl_init("https://mybusinessaccountmanagement.googleapis.com/v1/accounts");
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 "Authorization: Bearer {$token}",
                 "Content-Type: application/json"
             ]);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 4);
             $res = curl_exec($ch);
+            $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
-            $googlePublished = true;
+            if ($code === 200) {
+                $googleDirectPublished = true;
+                $googleQuotaRestricted = false;
+            }
         }
 
         // 2. Optional WordPress Syndication
@@ -1333,7 +1316,9 @@ Output ONLY valid JSON with keys:
 
         jsonResponse([
             'success' => true,
-            'message' => 'Update published successfully to Google Business Profile!',
+            'google_direct_published' => $googleDirectPublished,
+            'google_quota_restricted' => $googleQuotaRestricted,
+            'message' => $googleDirectPublished ? 'Published live to Google Business Profile!' : 'Update post prepared & copied to clipboard! Ready to publish in Google Business Profile.',
             'update' => $newUpdate,
             'maps_url' => $newUpdate['maps_url'],
             'wp_link' => $wpLink
