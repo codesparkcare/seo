@@ -338,10 +338,13 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                     </div>
                     <div>
                         <label class="form-label">Direct Google Maps Review URL (Share via WhatsApp / SMS)</label>
-                        <div style="display:flex; gap: 8px; margin-bottom: 14px;">
-                            <input type="text" class="form-control" id="reviewLinkInput" readonly style="font-family: monospace; font-size: 0.85rem;">
+                        <div style="display:flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;">
+                            <input type="text" class="form-control" id="reviewLinkInput" oninput="updateReviewQrLive()" style="font-family: monospace; font-size: 0.85rem; flex: 1; min-width: 260px;" placeholder="https://maps.google.com/?cid=4452102759555494648">
                             <button class="btn btn-outline" onclick="navigator.clipboard.writeText(document.getElementById('reviewLinkInput').value); showToast('Review link copied!');">
                                 <i class="fas fa-copy"></i> Copy
+                            </button>
+                            <button class="btn btn-primary" onclick="saveCustomReviewLink()">
+                                <i class="fas fa-save"></i> Save Link
                             </button>
                         </div>
                         <div style="display:flex; gap: 10px;">

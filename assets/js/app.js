@@ -318,28 +318,69 @@ async function loadReviews() {
         }).join('');
 
         // Review Collection Link & QR Code
-        const placeId = (AppState.profile && AppState.profile.google_place_id) ? AppState.profile.google_place_id : 'ChIJnXaQs6cTBDsRqOlGcHkecRw';
-        const reviewUrl = `https://search.google.com/local/writereview?placeid=${placeId}`;
+        let reviewUrl = '';
+        const customUrl = AppState.profile?.google_review_url;
+        const placeId = AppState.profile?.google_profile_id || AppState.profile?.google_place_id || '4452102759555494648';
+
+        if (customUrl && (customUrl.startsWith('http://') || customUrl.startsWith('https://'))) {
+            reviewUrl = customUrl;
+        } else if (placeId && placeId.startsWith('ChIJ')) {
+            reviewUrl = `https://search.google.com/local/writereview?placeid=${placeId}`;
+        } else if (placeId && /^\d+$/.test(placeId)) {
+            reviewUrl = `https://maps.google.com/?cid=${placeId}`;
+        } else {
+            reviewUrl = `https://maps.google.com/?cid=4452102759555494648`;
+        }
+
         const linkInput = document.getElementById('reviewLinkInput');
         if (linkInput) linkInput.value = reviewUrl;
 
-        const qrImg = document.getElementById('reviewQrCodeImg');
-        if (qrImg) {
-            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(reviewUrl)}`;
-        }
-
-        const waBtn = document.getElementById('whatsappShareBtn');
-        if (waBtn) {
-            const waMsg = encodeURIComponent(`Hi! Could you please take 15 seconds to leave Codespark Software Development a 5-star Google review? It helps us immensely: ${reviewUrl}`);
-            waBtn.href = `https://api.whatsapp.com/send?text=${waMsg}`;
-        }
+        updateReviewQrLive(reviewUrl);
     } catch (e) {
         console.error('Error loading reviews:', e);
     }
 }
 
+function updateReviewQrLive(overrideUrl) {
+    const link = overrideUrl || document.getElementById('reviewLinkInput')?.value?.trim() || 'https://maps.google.com/?cid=4452102759555494648';
+    const qrImg = document.getElementById('reviewQrCodeImg');
+    if (qrImg) {
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(link)}`;
+    }
+    const waBtn = document.getElementById('whatsappShareBtn');
+    if (waBtn) {
+        const waMsg = encodeURIComponent(`Hi! Could you please take 15 seconds to leave Codespark Software Development a 5-star Google review? It helps us immensely: ${link}`);
+        waBtn.href = `https://api.whatsapp.com/send?text=${waMsg}`;
+    }
+}
+
+async function saveCustomReviewLink() {
+    const link = document.getElementById('reviewLinkInput')?.value?.trim();
+    if (!link) {
+        showToast('Please enter a review link', 'warning');
+        return;
+    }
+    try {
+        const res = await fetch('api.php?action=save_profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ google_review_url: link })
+        });
+        const data = await res.json();
+        if (data.success) {
+            if (AppState.profile) AppState.profile.google_review_url = link;
+            showToast('Review link saved successfully!', 'success');
+            updateReviewQrLive(link);
+        } else {
+            showToast(data.error || 'Failed to save review link', 'error');
+        }
+    } catch (e) {
+        showToast('Error saving review link', 'error');
+    }
+}
+
 function printCounterStandee() {
-    const link = document.getElementById('reviewLinkInput')?.value || 'https://search.google.com/local/writereview?placeid=ChIJnXaQs6cTBDsRqOlGcHkecRw';
+    const link = document.getElementById('reviewLinkInput')?.value || 'https://maps.google.com/?cid=4452102759555494648';
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(link)}`;
     const bizName = AppState.profile?.name || 'Codespark Software Development';
     const city = AppState.profile?.city || 'Tirunelveli';
@@ -1022,6 +1063,7 @@ async function saveBusinessProfile() {
         website: document.getElementById('profWebsite').value.trim(),
         latitude: parseFloat(document.getElementById('profLat').value || 28.6315),
         longitude: parseFloat(document.getElementById('profLng').value || 77.2167),
+        google_profile_id: document.getElementById('profPlaceId').value.trim(),
         google_place_id: document.getElementById('profPlaceId').value.trim(),
         target_keywords: document.getElementById('profKeywords').value.trim()
     };
