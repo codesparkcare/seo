@@ -1823,13 +1823,7 @@ async function submitSocialPost(publishNow = false) {
     const metaKeywords = document.getElementById('postMetaKeywordsInput')?.value?.trim() || '';
 
     const platforms = [];
-    if (document.getElementById('platWordpress')?.checked) platforms.push('wordpress');
-    if (document.getElementById('platGmb')?.checked) platforms.push('gmb');
-    if (document.getElementById('platFacebook')?.checked) platforms.push('facebook');
-    if (document.getElementById('platInstagram')?.checked) platforms.push('instagram');
-    if (document.getElementById('platYoutube')?.checked) platforms.push('youtube');
-    if (document.getElementById('platLinkedin')?.checked) platforms.push('linkedin');
-    if (document.getElementById('platTwitter')?.checked) platforms.push('twitter');
+    if (document.getElementById('platWordpress')?.checked !== false) platforms.push('wordpress');
 
     if (!content) {
         showToast('Please enter post content', 'error');

@@ -678,28 +678,10 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                 </div>
 
                     <div class="form-group">
-                        <label class="form-label">Destination Channels</label>
+                        <label class="form-label">Destination Channel</label>
                         <div style="display:flex; flex-wrap: wrap; gap: 16px; margin-top: 6px;">
-                            <label style="display:flex; align-items:center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="platWordpress" checked> <i class="fab fa-wordpress" style="color: #21759B;"></i> WordPress (codespark.online)
-                            </label>
-                            <label style="display:flex; align-items:center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="platGmb" checked> <i class="fab fa-google" style="color: #4285F4;"></i> Google Business Profile (Map Pack)
-                            </label>
-                            <label style="display:flex; align-items:center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="platFacebook" checked> <i class="fab fa-facebook" style="color: #1877F2;"></i> Facebook Page (@codesparksoftware)
-                            </label>
-                            <label style="display:flex; align-items:center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="platInstagram" checked> <i class="fab fa-instagram" style="color: #E1306C;"></i> Instagram (@codesparksoftwaredevelopment)
-                            </label>
-                            <label style="display:flex; align-items:center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="platYoutube" checked> <i class="fab fa-youtube" style="color: #FF0000;"></i> YouTube Community (@CODESPARK-ek8fb)
-                            </label>
-                            <label style="display:flex; align-items:center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="platLinkedin"> <i class="fab fa-linkedin" style="color: #0A66C2;"></i> LinkedIn
-                            </label>
-                            <label style="display:flex; align-items:center; gap: 8px; cursor: pointer;">
-                                <input type="checkbox" id="platTwitter"> <i class="fab fa-x-twitter"></i> X / Twitter
+                            <label style="display:flex; align-items:center; gap: 8px; cursor: pointer; font-weight: 500;">
+                                <input type="checkbox" id="platWordpress" checked style="accent-color: var(--primary);"> <i class="fab fa-wordpress" style="color: #21759B; font-size: 1.15rem;"></i> WordPress (codespark.online)
                             </label>
                         </div>
                     </div>
@@ -711,7 +693,7 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
 
                     <div style="display:flex; gap: 12px; margin-top: 14px;">
                         <button class="btn btn-primary" id="btnPublishNow" onclick="submitSocialPost(true)">
-                            <i class="fas fa-paper-plane"></i> Publish Now to All Channels
+                            <i class="fab fa-wordpress"></i> Publish Now to WordPress
                         </button>
                         <button class="btn btn-outline" id="btnScheduleLater" onclick="submitSocialPost(false)">
                             <i class="fas fa-clock"></i> Schedule For Later
