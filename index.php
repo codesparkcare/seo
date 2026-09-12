@@ -67,8 +67,8 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                 <span>Website SEO & Schema</span>
             </li>
             <li class="nav-item" data-tab="social">
-                <i class="fas fa-share-alt"></i>
-                <span>Social & Citations</span>
+                <i class="fab fa-wordpress" style="color: #21759B;"></i>
+                <span>WordPress Posts</span>
             </li>
         </ul>
 
@@ -588,15 +588,15 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
         </section>
 
         <!-- ==========================================
-             TAB 5: SOCIAL & CITATIONS SYNDICATOR
+             TAB 5: WORDPRESS POST STUDIO
              ========================================== -->
         <section id="tab-social" class="tab-content">
-            <!-- Multi-Channel Composer -->
+            <!-- WordPress Post Composer -->
             <div class="card">
                 <div class="card-header">
                     <div>
-                        <h3><i class="fas fa-share-nodes" style="color: var(--primary);"></i> Omnichannel Local Social & GMB Composer</h3>
-                        <p>Cross-post geo-tagged updates simultaneously to Google Business Profile, Facebook, and LinkedIn.</p>
+                        <h3><i class="fab fa-wordpress" style="color: #21759B;"></i> WordPress Post & Article Studio</h3>
+                        <p>Create, optimize, and publish SEO blog posts directly to codespark.online.</p>
                     </div>
                 </div>
                 <div style="background: rgba(99, 102, 241, 0.08); border: 1px dashed var(--primary); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 18px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
