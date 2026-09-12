@@ -1123,6 +1123,59 @@ async function deletePostEntry(index) {
     }
 }
 
+async function generateAiPostBody() {
+    const topic = document.getElementById('postTitleInput')?.value?.trim() || '';
+    if (!topic) {
+        showToast('Please enter a Post Headline / Topic first.', 'warning');
+        document.getElementById('postTitleInput')?.focus();
+        return;
+    }
+
+    const btn = document.getElementById('btnGenBodyAi');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Writing Body...';
+    }
+
+    try {
+        const res = await fetch('api.php?action=generate_post_body', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic })
+        });
+        const data = await res.json();
+        if (data.success && data.post_body) {
+            const bodyEl = document.getElementById('postContentInput');
+            if (bodyEl) {
+                bodyEl.value = data.post_body;
+                bodyEl.style.borderColor = '#818cf8';
+                setTimeout(() => { bodyEl.style.borderColor = ''; }, 1500);
+            }
+            if (data.meta_title && !document.getElementById('postMetaTitleInput')?.value) {
+                document.getElementById('postMetaTitleInput').value = data.meta_title;
+            }
+            if (data.meta_description && !document.getElementById('postMetaDescInput')?.value) {
+                document.getElementById('postMetaDescInput').value = data.meta_description;
+            }
+            if (data.meta_keywords && !document.getElementById('postMetaKeywordsInput')?.value) {
+                document.getElementById('postMetaKeywordsInput').value = data.meta_keywords;
+            }
+            updateMetaCounters();
+            showToast('Post Body & SEO tags generated with AI!', 'success');
+        } else {
+            showToast(data.error || 'Failed to generate post body', 'error');
+        }
+    } catch (e) {
+        showToast('Network error generating post body', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
+    }
+}
+
 async function generateAiSeoMeta() {
     const topic = document.getElementById('postTitleInput')?.value?.trim() || '';
     const content = document.getElementById('postContentInput')?.value?.trim() || '';
@@ -1150,8 +1203,17 @@ async function generateAiSeoMeta() {
             if (document.getElementById('postMetaTitleInput')) document.getElementById('postMetaTitleInput').value = data.meta_title || '';
             if (document.getElementById('postMetaDescInput')) document.getElementById('postMetaDescInput').value = data.meta_description || '';
             if (document.getElementById('postMetaKeywordsInput')) document.getElementById('postMetaKeywordsInput').value = data.meta_keywords || '';
+            
+            // Auto-populate Post Body if empty
+            const bodyEl = document.getElementById('postContentInput');
+            if (bodyEl && !bodyEl.value.trim() && data.post_body) {
+                bodyEl.value = data.post_body;
+                bodyEl.style.borderColor = '#34d399';
+                setTimeout(() => { bodyEl.style.borderColor = ''; }, 1500);
+            }
+
             updateMetaCounters();
-            showToast('SEO Meta tags generated successfully with Gemini AI!', 'success');
+            showToast('Post Body & SEO Meta tags generated with Gemini AI!', 'success');
         } else {
             showToast(data.error || 'Failed to generate SEO meta tags', 'error');
         }

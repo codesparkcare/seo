@@ -606,8 +606,13 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Post Body (Include local hashtags & geo intent)</label>
-                    <textarea class="form-control" id="postContentInput" rows="3" placeholder="Write your localized business update here..."></textarea>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label class="form-label" style="margin-bottom:0;">Post Body (Include local hashtags & geo intent)</label>
+                        <button type="button" class="btn btn-outline btn-sm" id="btnGenBodyAi" onclick="generateAiPostBody()" style="padding: 3px 10px; font-size: 0.78rem; color: #818cf8; border-color: rgba(99, 102, 241, 0.4);">
+                            <i class="fas fa-magic"></i> Auto-Generate Body with AI
+                        </button>
+                    </div>
+                    <textarea class="form-control" id="postContentInput" rows="5" placeholder="Write your localized business update here..."></textarea>
                 </div>
 
                 <!-- Dedicated SEO Meta Tags Box (Gemini AI Powered) -->

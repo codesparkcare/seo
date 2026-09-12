@@ -909,14 +909,18 @@ Return ONLY valid JSON.";
         }
         break;
 
+    case 'generate_post_body':
     case 'generate_seo_meta':
         $topic = trim($params['topic'] ?? ($params['title'] ?? ''));
         $content = trim($params['content'] ?? '');
         $city = $config['business']['city'] ?? 'Tirunelveli';
         $bizName = $config['business']['name'] ?? 'Codespark Software Development';
+        $phone = $config['business']['phone'] ?? '+91 81108 99000';
+        $website = $config['business']['website'] ?? 'https://codespark.online/';
+        $address = $config['business']['address'] ?? 'Housing Board Colony, Melapalayam';
 
         if (empty($topic) && empty($content)) {
-            jsonResponse(['error' => 'Please provide a topic or headline to generate SEO meta.'], 400);
+            $topic = 'Top Software Company & Internship in Tirunelveli';
         }
 
         $baseTitle = $topic ?: 'Custom Software & Web Development';
@@ -925,31 +929,48 @@ Return ONLY valid JSON.";
             $metaTitle = ucwords($baseTitle) . " - " . $bizName;
         }
 
-        $metaDesc = "Looking for " . strtolower($baseTitle) . " in {$city}? {$bizName} builds high-performance mobile apps, custom software & web solutions. Call +91 81108 99000.";
+        $metaDesc = "Looking for " . strtolower($baseTitle) . " in {$city}? {$bizName} builds high-performance mobile apps, custom software & web solutions. Call {$phone}.";
         if (strlen($metaDesc) > 160) {
             $metaDesc = substr($metaDesc, 0, 157) . '...';
         }
 
         $metaKeywords = "{$baseTitle}, Software Company in {$city}, Best IT Solutions {$city}, Mobile App Development, Web Design {$city}, {$bizName}";
 
-        // If Gemini API Key is configured, prompt Gemini Pro
+        // Format clean hashtag
+        $words = preg_split('/[\s,\-]+/', $baseTitle);
+        $hashtagTopic = '';
+        foreach ($words as $w) {
+            if (strlen($w) > 2) $hashtagTopic .= ucfirst(strtolower($w));
+        }
+        if (empty($hashtagTopic)) $hashtagTopic = 'SoftwareCompany';
+
+        // Check if topic already ends with in Tirunelveli
+        $cleanTopic = preg_replace('/\s+in\s+' . preg_quote($city, '/') . '$/i', '', $baseTitle);
+
+        // High-converting localized post body with geo-intent and hashtags
+        $postBody = "Looking for premier {$cleanTopic} in {$city}? 🚀\n\nAt {$bizName}, we deliver high-performance digital solutions tailored to businesses and students across Tamil Nadu. From real-world live project internships to enterprise Android app development, custom billing software, and top-ranking web design, our expert developers ensure unmatched quality and fast results.\n\n📍 Office: {$address}, {$city} - 627005\n📞 Call / WhatsApp: {$phone}\n🌐 Explore: {$website}\n\n#{$hashtagTopic} #Tirunelveli #TirunelveliIT #Codespark #WebDevelopment #MobileApps #LocalSEO";
+
+        // If Gemini API Key is configured, attempt Gemini Live
         $geminiKey = $config['settings']['gemini_api_key'] ?? '';
         if (!empty($geminiKey) && strpos($geminiKey, 'AIzaSy') === 0) {
-            $prompt = "You are a master SEO specialist for {$bizName} in {$city}, Tamil Nadu.
-Given the post title/topic: '{$topic}' and post draft: '{$content}'.
-Generate high-ranking SEO meta tags.
-Return valid JSON ONLY with these exact fields:
-- 'meta_title': 50-60 char catchy SEO title with primary keyword and {$bizName}
-- 'meta_description': 150-160 char high-converting meta description with keyword and call-to-action
-- 'meta_keywords': 5-8 comma-separated local target search keywords for {$city}
-Return ONLY valid JSON.";
-            $geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" . urlencode($geminiKey);
+            $prompt = "You are a master social media and local SEO copywriter for {$bizName} in {$city}, Tamil Nadu.
+Given the post topic: '{$topic}'.
+Generate a high-converting Google Business Profile update and social post body. Include local geo-intent, address ({$address}, {$city}), phone ({$phone}), website ({$website}), and 5-6 hashtags.
+Also generate SEO title (50-60 chars), meta description (150-160 chars), and meta keywords.
+Return valid JSON ONLY with these fields:
+- 'post_body': 3-4 engaging paragraphs with bullet points, contact details, and hashtags
+- 'meta_title': 50-60 char title
+- 'meta_description': 150-160 char description
+- 'meta_keywords': 5-8 comma-separated keywords
+Return ONLY JSON.";
+
+            $geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . urlencode($geminiKey);
             $ch = curl_init($geminiUrl);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['contents' => [['parts' => [['text' => $prompt]]]]]));
             curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             $res = curl_exec($ch);
             curl_close($ch);
@@ -959,6 +980,7 @@ Return ONLY valid JSON.";
                 $rawText = preg_replace('/^```(?:json)?\s*/i', '', trim($rawText));
                 $rawText = preg_replace('/```$/i', '', trim($rawText));
                 $parsed = json_decode($rawText, true);
+                if (!empty($parsed['post_body'])) $postBody = trim($parsed['post_body']);
                 if (!empty($parsed['meta_title'])) $metaTitle = $parsed['meta_title'];
                 if (!empty($parsed['meta_description'])) $metaDesc = $parsed['meta_description'];
                 if (!empty($parsed['meta_keywords'])) $metaKeywords = $parsed['meta_keywords'];
@@ -967,6 +989,7 @@ Return ONLY valid JSON.";
 
         jsonResponse([
             'success' => true,
+            'post_body' => $postBody,
             'meta_title' => $metaTitle,
             'meta_description' => $metaDesc,
             'meta_keywords' => $metaKeywords
