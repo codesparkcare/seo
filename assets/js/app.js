@@ -442,11 +442,11 @@ function renderReviewsTable() {
                 <td>
                     <div style="display:flex; align-items:center; gap:6px;">
                         ${isReplied ? `
-                            <button class="btn btn-outline btn-sm" onclick="openReplyModal(${r.id}, '${escapeHtml(r.author_name)}', '${escapeHtml(r.comment || '')}', '${escapeHtml(r.ai_reply || '')}')">
+                            <button class="btn btn-outline btn-sm" onclick="openReplyModal(${r.id})">
                                 <i class="fas fa-edit"></i> Edit Reply
                             </button>
                         ` : `
-                            <button class="btn btn-primary btn-sm" onclick="openReplyModal(${r.id}, '${escapeHtml(r.author_name)}', '${escapeHtml(r.comment || '')}', '')">
+                            <button class="btn btn-primary btn-sm" onclick="openReplyModal(${r.id})">
                                 <i class="fas fa-magic"></i> Auto-Generate Reply
                             </button>
                         `}
@@ -649,40 +649,68 @@ async function deleteCustomerReview(id) {
     }
 }
 
-async function openReplyModal(reviewId, author, comment, existingReply) {
-    document.getElementById('modalReviewId').value = reviewId;
-    document.getElementById('modalAuthorName').textContent = author;
-    document.getElementById('modalComment').textContent = comment || '(No comment provided)';
+async function openReplyModal(reviewId) {
+    const rev = (ReviewState.allReviews || []).find(r => r.id == reviewId) || {};
+    const author = rev.author_name || 'Valued Customer';
+    const comment = rev.comment || '';
+    const existingReply = rev.ai_reply || '';
+    const rating = rev.rating || 5;
+
+    const idInput = document.getElementById('modalReviewId');
+    const authorEl = document.getElementById('modalAuthorName');
+    const commentEl = document.getElementById('modalComment');
     const replyTextarea = document.getElementById('modalReplyContent');
+    const badgeEl = document.getElementById('modalKeywordBadge');
+    const modal = document.getElementById('replyModal');
+
+    if (idInput) idInput.value = reviewId;
+    if (authorEl) authorEl.textContent = author;
+    if (commentEl) commentEl.textContent = comment || '(No review text provided)';
 
     if (existingReply) {
-        replyTextarea.value = existingReply;
-    } else {
-        replyTextarea.value = 'Generating AI response with targeted local SEO keywords...';
-        try {
-            const res = await fetch(`api.php?action=generate_review_reply&review_id=${reviewId}`);
-            const data = await res.json();
-            if (data.success) {
-                replyTextarea.value = data.reply;
-                document.getElementById('modalKeywordBadge').textContent = `Injected Keyword: "${data.targeted_keyword}"`;
-            } else {
-                replyTextarea.value = 'Thank you for your review!';
-            }
-        } catch (e) {
-            replyTextarea.value = 'Thank you for choosing our local business!';
-        }
+        if (replyTextarea) replyTextarea.value = existingReply;
+        if (badgeEl) badgeEl.textContent = 'Existing Local SEO Reply';
+        if (modal) modal.style.display = 'flex';
+        return;
     }
 
-    document.getElementById('replyModal').style.display = 'flex';
+    if (replyTextarea) replyTextarea.value = 'Generating AI response with targeted Tirunelveli SEO keywords...';
+    if (badgeEl) badgeEl.textContent = 'Optimizing with Local Keywords...';
+    if (modal) modal.style.display = 'flex';
+
+    try {
+        const params = new URLSearchParams({
+            action: 'generate_review_reply',
+            review_id: reviewId,
+            author_name: author,
+            comment: comment,
+            rating: rating
+        });
+        const res = await fetch(`api.php?${params.toString()}`);
+        const data = await res.json();
+        if (data.success && data.reply) {
+            if (replyTextarea) replyTextarea.value = data.reply;
+            if (badgeEl) badgeEl.textContent = `Targeted Keyword: "${data.targeted_keyword}" (${data.powered_by || 'Local SEO Engine'})`;
+        } else {
+            if (replyTextarea) {
+                replyTextarea.value = `Hello ${author}, thank you so much for the 5-star review! Our team at Codespark Software Development is dedicated to delivering top-tier software and web development services in Tirunelveli. We truly appreciate your support!`;
+            }
+        }
+    } catch (e) {
+        if (replyTextarea) {
+            replyTextarea.value = `Hello ${author}, thank you so much for the 5-star review! Our team at Codespark Software Development is dedicated to delivering top-tier software and web development services in Tirunelveli. We truly appreciate your support!`;
+        }
+    }
 }
 
 function closeReplyModal() {
-    document.getElementById('replyModal').style.display = 'none';
+    const m = document.getElementById('replyModal');
+    if (m) m.style.display = 'none';
 }
 
 async function submitReviewReply() {
-    const reviewId = document.getElementById('modalReviewId').value;
-    const reply = document.getElementById('modalReplyContent').value.trim();
+    const reviewId = document.getElementById('modalReviewId')?.value;
+    const reply = document.getElementById('modalReplyContent')?.value?.trim();
 
     if (!reply) {
         showToast('Please enter a reply', 'error');
@@ -697,9 +725,15 @@ async function submitReviewReply() {
         });
         const data = await res.json();
         if (data.success) {
+            // Update local state immediately so UI updates in real-time
+            const rev = (ReviewState.allReviews || []).find(r => r.id == reviewId);
+            if (rev) {
+                rev.ai_reply = reply;
+                rev.status = 'replied';
+            }
+            renderReviewsTable();
             showToast('Reply published & synced to Google Business Profile!', 'success');
             closeReplyModal();
-            loadReviews();
             loadOverview();
         } else {
             showToast(data.error || 'Failed to save reply', 'error');

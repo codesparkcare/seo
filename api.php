@@ -379,18 +379,42 @@ switch ($action) {
         $city = $biz['city'] ?? 'Tirunelveli';
         $keywords = explode(',', $biz['target_keywords'] ?? 'software company, web development');
         $chosenKw = trim($keywords[array_rand($keywords)]);
-        $author = trim($params['author_name'] ?? 'Customer');
-        $comment = trim($params['comment'] ?? 'Excellent service');
+        $author = trim($params['author_name'] ?? '');
+        $comment = trim($params['comment'] ?? '');
         $rating = intval($params['rating'] ?? 5);
+        $revId = intval($params['review_id'] ?? 0);
+
+        // If author or comment wasn't sent in query, lookup from review storage
+        if ($revId > 0 && (empty($author) || empty($comment))) {
+            foreach ($config['google_reviews_cache'] ?? [] as $r) {
+                if (abs(crc32($r['author_name'] . ($r['time'] ?? ''))) == $revId) {
+                    if (empty($author)) $author = $r['author_name'];
+                    if (empty($comment)) $comment = $r['comment'];
+                    $rating = $r['rating'] ?? 5;
+                    break;
+                }
+            }
+            foreach ($config['reviews'] ?? [] as $r) {
+                if (($r['id'] ?? 0) == $revId) {
+                    if (empty($author)) $author = $r['author_name'];
+                    if (empty($comment)) $comment = $r['comment'];
+                    $rating = $r['rating'] ?? 5;
+                    break;
+                }
+            }
+        }
+
+        if (empty($author)) $author = 'Valued Customer';
+        if (empty($comment)) $comment = 'Excellent service and experience!';
 
         $geminiKey = $config['settings']['gemini_api_key'] ?? '';
         $reply = '';
 
-        // If Google Gemini Pro API Key is present, call Google Gemini Pro live!
+        // If Google Gemini API Key is present, call Gemini live!
         if (!empty($geminiKey)) {
             $prompt = "You are the manager at {$bizName} in {$city}. Write a warm, polite, and professional Google Maps review reply to customer {$author} who gave us {$rating} stars and said: '{$comment}'. Naturally include our target local service keyword '{$chosenKw}' and mention {$city}. Keep it 2-3 sentences long.";
             
-            $geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" . urlencode($geminiKey);
+            $geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . urlencode($geminiKey);
             $payload = [
                 'contents' => [
                     [
@@ -410,7 +434,7 @@ switch ($action) {
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
             curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 3);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             $res = curl_exec($ch);
             curl_close($ch);
@@ -421,9 +445,9 @@ switch ($action) {
             }
         }
 
-        // High quality fallback if no Gemini key or offline
+        // High quality local SEO fallback if Gemini key is invalid/offline
         if (empty($reply)) {
-            $reply = "Hello {$author}, thank you so much for the 5-star review! Our team at {$bizName} is dedicated to delivering top-tier {$chosenKw} across {$city}. We truly appreciate your support!";
+            $reply = "Hello {$author}, thank you so much for the 5-star review! Our team at {$bizName} is dedicated to delivering top-tier {$chosenKw} across {$city}. We truly appreciate your support and trust!";
         }
 
         jsonResponse([
