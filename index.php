@@ -366,7 +366,8 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                         <h3><i class="fas fa-comments" style="color: #FBBF24;"></i> Incoming Customer Reviews</h3>
                         <p>Google prioritizes business profiles that respond quickly with localized service keywords.</p>
                     </div>
-                    <div>
+                    <div style="display:flex; gap: 8px;">
+                        <button class="btn btn-primary btn-sm" onclick="openAddReviewModal()"><i class="fas fa-plus"></i> Add Real Review</button>
                         <button class="btn btn-outline btn-sm" onclick="loadReviews()"><i class="fas fa-sync"></i> Refresh</button>
                     </div>
                 </div>
@@ -946,6 +947,38 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
         </section>
 
     </main>
+</div>
+
+<!-- ADD REVIEW MODAL -->
+<div id="addReviewModal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-active); border-radius: var(--radius-md); max-width: 520px; width: 100%; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+            <h3 style="margin:0; font-size: 1.15rem;"><i class="fas fa-star" style="color: #fbbc05;"></i> Add Real Customer Review</h3>
+            <button onclick="closeAddReviewModal()" style="background:transparent; border:none; color: var(--text-dim); font-size: 1.2rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label">Customer Name</label>
+            <input type="text" class="form-control" id="newRevAuthor" placeholder="e.g. Ramesh Kumar">
+        </div>
+        <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label">Star Rating</label>
+            <select class="form-control" id="newRevRating">
+                <option value="5">★★★★★ (5 Stars)</option>
+                <option value="4">★★★★☆ (4 Stars)</option>
+                <option value="3">★★★☆☆ (3 Stars)</option>
+            </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label">Customer Review Comment</label>
+            <textarea class="form-control" id="newRevComment" rows="3" placeholder="Paste the client's actual Google feedback here..."></textarea>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap: 10px;">
+            <button class="btn btn-outline" onclick="closeAddReviewModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitNewCustomerReview()">
+                <i class="fas fa-save"></i> Save Customer Review
+            </button>
+        </div>
+    </div>
 </div>
 
 <!-- AI REVIEW REPLY MODAL -->

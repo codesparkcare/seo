@@ -215,34 +215,80 @@ switch ($action) {
     // 5. REVIEWS & AI AUTO-REPLY (STATELESS)
     // ==========================================
     case 'get_reviews':
-        // Real-time reviews or demo array
-        $reviews = [
-            [
-                'id' => 1,
-                'author_name' => 'Karthik Raja',
-                'rating' => 5,
-                'comment' => 'Codespark built our billing and inventory software in Tirunelveli. Highly professional team, fast delivery!',
-                'ai_reply' => 'Hi Karthik, thank you for the 5-star review! Our team at Codespark Software Development takes great pride in delivering top-tier billing software in Tirunelveli.',
-                'status' => 'replied'
-            ],
-            [
-                'id' => 2,
-                'author_name' => 'Ananya Sundaram',
-                'rating' => 5,
-                'comment' => 'Excellent web design and mobile app development services. Our website ranking improved tremendously on Google.',
-                'ai_reply' => 'Thank you Ananya! We are delighted to hear our web development and SEO strategies delivered strong results for your business in Tirunelveli.',
-                'status' => 'replied'
-            ],
-            [
-                'id' => 3,
-                'author_name' => 'Mohammed Farook',
-                'rating' => 5,
-                'comment' => 'Best software company for internships and custom software solutions. Great support from their developers.',
-                'ai_reply' => null,
-                'status' => 'pending'
-            ]
-        ];
+        if (isset($config['reviews']) && is_array($config['reviews']) && count($config['reviews']) > 0) {
+            $reviews = $config['reviews'];
+        } else {
+            // Default sample demo reviews showing how AI keyword replies work
+            $reviews = [
+                [
+                    'id' => 1,
+                    'author_name' => 'Karthik Raja [Sample Demo]',
+                    'rating' => 5,
+                    'comment' => 'Codespark built our billing and inventory software in Tirunelveli. Highly professional team, fast delivery!',
+                    'ai_reply' => 'Hi Karthik, thank you for the 5-star review! Our team at Codespark Software Development takes great pride in delivering top-tier billing software in Tirunelveli.',
+                    'status' => 'replied',
+                    'is_demo' => true
+                ],
+                [
+                    'id' => 2,
+                    'author_name' => 'Ananya Sundaram [Sample Demo]',
+                    'rating' => 5,
+                    'comment' => 'Excellent web design and mobile app development services. Our website ranking improved tremendously on Google.',
+                    'ai_reply' => 'Thank you Ananya! We are delighted to hear our web development and SEO strategies delivered strong results for your business in Tirunelveli.',
+                    'status' => 'replied',
+                    'is_demo' => true
+                ],
+                [
+                    'id' => 3,
+                    'author_name' => 'Mohammed Farook [Sample Demo]',
+                    'rating' => 5,
+                    'comment' => 'Best software company for internships and custom software solutions. Great support from their developers.',
+                    'ai_reply' => null,
+                    'status' => 'pending',
+                    'is_demo' => true
+                ]
+            ];
+        }
         jsonResponse(['success' => true, 'reviews' => $reviews]);
+        break;
+
+    case 'add_review':
+        $author = trim($params['author_name'] ?? 'Customer');
+        $rating = intval($params['rating'] ?? 5);
+        $comment = trim($params['comment'] ?? '');
+
+        if (empty($comment)) {
+            jsonResponse(['error' => 'Please enter review comment.'], 400);
+        }
+
+        if (!isset($config['reviews']) || !is_array($config['reviews'])) {
+            $config['reviews'] = [];
+        }
+
+        $newRev = [
+            'id' => time(),
+            'author_name' => $author,
+            'rating' => $rating,
+            'comment' => $comment,
+            'ai_reply' => null,
+            'status' => 'pending',
+            'is_demo' => false
+        ];
+
+        array_unshift($config['reviews'], $newRev);
+        saveConfig($config);
+        jsonResponse(['success' => true, 'message' => 'Real customer review added successfully!']);
+        break;
+
+    case 'delete_review':
+        $revId = intval($params['id'] ?? 0);
+        if (isset($config['reviews']) && is_array($config['reviews'])) {
+            $config['reviews'] = array_values(array_filter($config['reviews'], function($r) use ($revId) {
+                return ($r['id'] ?? 0) != $revId;
+            }));
+            saveConfig($config);
+        }
+        jsonResponse(['success' => true, 'message' => 'Review entry removed.']);
         break;
 
     case 'generate_review_reply':

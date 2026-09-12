@@ -285,9 +285,13 @@ async function loadReviews() {
         tbody.innerHTML = data.reviews.map(r => {
             const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
             const isReplied = r.status === 'replied';
+            const isDemo = !!r.is_demo;
             return `
                 <tr>
-                    <td><strong>${escapeHtml(r.author_name)}</strong></td>
+                    <td>
+                        <strong>${escapeHtml(r.author_name)}</strong>
+                        ${isDemo ? `<span style="display:inline-block; font-size:0.68rem; background:rgba(255,255,255,0.08); color:var(--text-dim); padding:1px 6px; border-radius:3px; margin-left:6px;">Sample Demo</span>` : `<span style="display:inline-block; font-size:0.68rem; background:rgba(16,185,129,0.15); color:#34d399; padding:1px 6px; border-radius:3px; margin-left:6px;"><i class="fas fa-check-circle"></i> Real Client</span>`}
+                    </td>
                     <td style="color: #F59E0B; font-size: 1rem; letter-spacing: 2px;">${stars}</td>
                     <td style="max-width: 320px;">
                         <div style="font-size: 0.85rem;">${escapeHtml(r.comment || '')}</div>
@@ -303,15 +307,22 @@ async function loadReviews() {
                         </span>
                     </td>
                     <td>
-                        ${isReplied ? `
-                            <button class="btn btn-outline btn-sm" onclick="openReplyModal(${r.id}, '${escapeHtml(r.author_name)}', '${escapeHtml(r.comment || '')}', '${escapeHtml(r.ai_reply || '')}')">
-                                <i class="fas fa-edit"></i> Edit Reply
-                            </button>
-                        ` : `
-                            <button class="btn btn-primary btn-sm" onclick="openReplyModal(${r.id}, '${escapeHtml(r.author_name)}', '${escapeHtml(r.comment || '')}', '')">
-                                <i class="fas fa-magic"></i> Auto-Generate Reply
-                            </button>
-                        `}
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            ${isReplied ? `
+                                <button class="btn btn-outline btn-sm" onclick="openReplyModal(${r.id}, '${escapeHtml(r.author_name)}', '${escapeHtml(r.comment || '')}', '${escapeHtml(r.ai_reply || '')}')">
+                                    <i class="fas fa-edit"></i> Edit Reply
+                                </button>
+                            ` : `
+                                <button class="btn btn-primary btn-sm" onclick="openReplyModal(${r.id}, '${escapeHtml(r.author_name)}', '${escapeHtml(r.comment || '')}', '')">
+                                    <i class="fas fa-magic"></i> Auto-Generate Reply
+                                </button>
+                            `}
+                            ${!isDemo ? `
+                                <button class="btn btn-outline btn-sm" onclick="deleteCustomerReview(${r.id})" style="padding:4px 8px; color:#ef4444; border-color:rgba(239,68,68,0.3);" title="Remove review">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            ` : ''}
+                        </div>
                     </td>
                 </tr>
             `;
@@ -425,6 +436,69 @@ function printCounterStandee() {
         </html>
     `);
     printWin.document.close();
+}
+
+function openAddReviewModal() {
+    const m = document.getElementById('addReviewModal');
+    if (m) {
+        if (document.getElementById('newRevAuthor')) document.getElementById('newRevAuthor').value = '';
+        if (document.getElementById('newRevComment')) document.getElementById('newRevComment').value = '';
+        m.style.display = 'flex';
+    }
+}
+
+function closeAddReviewModal() {
+    const m = document.getElementById('addReviewModal');
+    if (m) m.style.display = 'none';
+}
+
+async function submitNewCustomerReview() {
+    const author = document.getElementById('newRevAuthor')?.value?.trim() || 'Customer';
+    const rating = parseInt(document.getElementById('newRevRating')?.value || 5);
+    const comment = document.getElementById('newRevComment')?.value?.trim() || '';
+
+    if (!comment) {
+        showToast('Please enter customer review comment', 'warning');
+        return;
+    }
+
+    try {
+        const res = await fetch('api.php?action=add_review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ author_name: author, rating, comment })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(data.message, 'success');
+            closeAddReviewModal();
+            loadReviews();
+            loadOverview();
+        } else {
+            showToast(data.error || 'Failed to add review', 'error');
+        }
+    } catch (e) {
+        showToast('Error saving review', 'error');
+    }
+}
+
+async function deleteCustomerReview(id) {
+    if (!confirm('Remove this review from your dashboard?')) return;
+    try {
+        const res = await fetch('api.php?action=delete_review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Review removed', 'info');
+            loadReviews();
+            loadOverview();
+        }
+    } catch (e) {
+        showToast('Error removing review', 'error');
+    }
 }
 
 async function openReplyModal(reviewId, author, comment, existingReply) {
