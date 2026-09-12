@@ -48,6 +48,9 @@ function switchTab(tabId) {
         setTimeout(initOrRefreshMap, 200);
     } else if (tabId === 'reviews') {
         loadReviews();
+    } else if (tabId === 'gmb-updates') {
+        loadGmbUpdates();
+        updateGmbLivePreview();
     } else if (tabId === 'social') {
         loadPosts();
         loadCitations();
@@ -1128,40 +1131,331 @@ async function deletePostEntry(index) {
     }
 }
 
+// ==========================================
+// GOOGLE MAP UPDATES STUDIO CONTROLLER
+// ==========================================
+
 function openGmbUpdateModal(idx) {
     const post = (AppState.posts || [])[idx];
-    if (!post) {
-        showToast('Post content not found', 'warning');
-        return;
+    switchTab('gmb-updates');
+    if (post) {
+        if (document.getElementById('gmbHeadlineInput')) {
+            document.getElementById('gmbHeadlineInput').value = post.title || post.meta_title || '';
+        }
+        if (document.getElementById('gmbBodyInput')) {
+            document.getElementById('gmbBodyInput').value = post.content || '';
+        }
+        if (document.getElementById('gmbImageUrlInput') && post.image_url) {
+            document.getElementById('gmbImageUrlInput').value = post.image_url;
+        }
+        if (document.getElementById('gmbButtonUrlInput') && post.cta_url) {
+            document.getElementById('gmbButtonUrlInput').value = post.cta_url;
+        }
+        if (document.getElementById('gmbCtaTypeSelect') && post.cta_type) {
+            document.getElementById('gmbCtaTypeSelect').value = post.cta_type;
+        }
+        updateGmbLivePreview();
+        showToast('Post loaded into Google Map Updates studio! Ready to publish.', 'info');
     }
-    const textToCopy = (post.title ? post.title + "\n\n" : '') + (post.content || '');
-    const textarea = document.getElementById('gmbModalText');
-    if (textarea) textarea.value = textToCopy;
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(textToCopy);
-    }
-
-    const modal = document.getElementById('gmbUpdateModal');
-    if (modal) modal.style.display = 'flex';
-    showToast('Post text copied to clipboard! Opening options...', 'info');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function closeGmbUpdateModal() {
-    const modal = document.getElementById('gmbUpdateModal');
-    if (modal) modal.style.display = 'none';
+    // Legacy support
 }
 
 function copyGmbModalText() {
-    const text = document.getElementById('gmbModalText')?.value || '';
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
-            showToast('Post text copied to clipboard!', 'success');
-        });
-    } else {
-        showToast('Post copied!', 'success');
+    // Legacy support
+}
+
+function updateGmbLivePreview() {
+    const headline = document.getElementById('gmbHeadlineInput')?.value?.trim() || 'Top Software & Web Development Company in Tirunelveli | Codespark';
+    const body = document.getElementById('gmbBodyInput')?.value || '';
+    const imageUrl = document.getElementById('gmbImageUrlInput')?.value?.trim() || 'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?w=800&auto=format&fit=crop';
+    const ctaType = document.getElementById('gmbCtaTypeSelect')?.value || 'LEARN_MORE';
+    const ctaUrl = document.getElementById('gmbButtonUrlInput')?.value?.trim() || 'https://codespark.online/services/';
+
+    // Update image
+    const imgEl = document.getElementById('gmbPreviewImg');
+    if (imgEl) {
+        imgEl.src = imageUrl;
+        imgEl.onerror = () => {
+            imgEl.src = 'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?w=800&auto=format&fit=crop';
+        };
+    }
+
+    // Update headline
+    const headlineEl = document.getElementById('gmbPreviewHeadline');
+    if (headlineEl) headlineEl.textContent = headline;
+
+    // Update body
+    const bodyEl = document.getElementById('gmbPreviewBody');
+    if (bodyEl) {
+        if (body.trim()) {
+            bodyEl.textContent = body;
+        } else {
+            bodyEl.textContent = "Looking for premier digital solutions in Tirunelveli? 🚀\n\nAt Codespark Software Development, we build high-performance mobile apps, custom billing systems, and responsive websites.\n\n📍 Melapalayam, Tirunelveli\n📞 Call: +91 81108 99000\n🌐 codespark.online";
+        }
+    }
+
+    // Update character counter
+    const charCountEl = document.getElementById('gmbCharCount');
+    if (charCountEl) {
+        const len = body.length;
+        charCountEl.textContent = `${len} characters` + (len > 1500 ? ' (Google limit is 1500)' : '');
+        charCountEl.style.color = len > 1500 ? '#ef4444' : 'var(--text-dim)';
+    }
+
+    // Format Button Label
+    const ctaLabels = {
+        'LEARN_MORE': 'Learn more',
+        'BOOK': 'Book online',
+        'ORDER': 'Order online',
+        'SIGN_UP': 'Sign up',
+        'CALL': 'Call now'
+    };
+    const ctaText = ctaLabels[ctaType] || 'Learn more';
+    
+    const btnTextEl = document.getElementById('gmbPreviewCtaText');
+    if (btnTextEl) btnTextEl.textContent = ctaText;
+
+    const ctaBtn = document.getElementById('gmbPreviewCtaBtn');
+    if (ctaBtn) {
+        ctaBtn.href = ctaType === 'CALL' ? 'tel:+918110899000' : ctaUrl;
+    }
+
+    const urlTargetEl = document.getElementById('gmbPreviewUrlTarget');
+    if (urlTargetEl) {
+        urlTargetEl.textContent = ctaType === 'CALL' ? '+91 81108 99000' : ctaUrl.replace(/^https?:\/\//, '');
+        urlTargetEl.title = ctaUrl;
     }
 }
+
+function selectGmbPresetTopic(topic, el) {
+    const input = document.getElementById('gmbTopicInput');
+    if (input) input.value = topic;
+
+    // Highlight chip
+    document.querySelectorAll('.gmb-topic-chip').forEach(c => c.classList.remove('active'));
+    if (el) el.classList.add('active');
+
+    // Automatically generate with Gemini
+    generateGmbUpdateWithGemini();
+}
+
+function selectGmbPresetImage(url, el) {
+    const input = document.getElementById('gmbImageUrlInput');
+    if (input) input.value = url;
+
+    document.querySelectorAll('.gmb-image-preset-card').forEach(c => c.classList.remove('active'));
+    if (el) el.classList.add('active');
+
+    updateGmbLivePreview();
+}
+
+function setGmbButtonUrl(url) {
+    const input = document.getElementById('gmbButtonUrlInput');
+    if (input) {
+        input.value = url;
+        input.style.borderColor = '#34d399';
+        setTimeout(() => { input.style.borderColor = ''; }, 1000);
+    }
+    updateGmbLivePreview();
+}
+
+async function generateGmbUpdateWithGemini() {
+    const topic = document.getElementById('gmbTopicInput')?.value?.trim() || 'Software Development';
+    const btn = document.getElementById('btnGenGmbAi');
+    const origHtml = btn ? btn.innerHTML : '';
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gemini Connecting...';
+    }
+
+    try {
+        const res = await fetch('api.php?action=generate_gmb_update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            if (document.getElementById('gmbHeadlineInput')) {
+                document.getElementById('gmbHeadlineInput').value = data.headline || '';
+            }
+            if (document.getElementById('gmbBodyInput')) {
+                document.getElementById('gmbBodyInput').value = data.content || '';
+            }
+            if (document.getElementById('gmbImageUrlInput') && data.image_url) {
+                document.getElementById('gmbImageUrlInput').value = data.image_url;
+                // Highlight matching image preset if exists
+                document.querySelectorAll('.gmb-image-preset-card').forEach(c => {
+                    const img = c.querySelector('img');
+                    if (img && data.image_url.includes(img.src.split('?')[0])) {
+                        c.classList.add('active');
+                    } else {
+                        c.classList.remove('active');
+                    }
+                });
+            }
+            if (document.getElementById('gmbButtonUrlInput') && data.cta_url) {
+                document.getElementById('gmbButtonUrlInput').value = data.cta_url;
+            }
+            if (document.getElementById('gmbCtaTypeSelect') && data.cta_type) {
+                document.getElementById('gmbCtaTypeSelect').value = data.cta_type;
+            }
+
+            updateGmbLivePreview();
+            showToast('Gemini connected Google Map & generated update post!', 'success');
+        } else {
+            showToast(data.error || 'Failed to generate update with Gemini', 'error');
+        }
+    } catch (e) {
+        showToast('Network error generating update with Gemini', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
+    }
+}
+
+async function publishGmbUpdate() {
+    const headline = document.getElementById('gmbHeadlineInput')?.value?.trim() || '';
+    const content = document.getElementById('gmbBodyInput')?.value?.trim() || '';
+    const imageUrl = document.getElementById('gmbImageUrlInput')?.value?.trim() || '';
+    const ctaType = document.getElementById('gmbCtaTypeSelect')?.value || 'LEARN_MORE';
+    const ctaUrl = document.getElementById('gmbButtonUrlInput')?.value?.trim() || 'https://codespark.online/services/';
+    const syndicateWp = document.getElementById('gmbSyndicateWp')?.checked || false;
+
+    if (!content) {
+        showToast('Please provide update body content before publishing.', 'warning');
+        document.getElementById('gmbBodyInput')?.focus();
+        return;
+    }
+
+    if (!ctaUrl) {
+        showToast('Please specify a Button Destination URL.', 'warning');
+        document.getElementById('gmbButtonUrlInput')?.focus();
+        return;
+    }
+
+    const btn = document.getElementById('btnPublishGmb');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publishing to Google Profile...';
+    }
+
+    try {
+        const res = await fetch('api.php?action=publish_gmb_update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                headline,
+                content,
+                image_url: imageUrl,
+                cta_type: ctaType,
+                cta_url: ctaUrl,
+                syndicate_wp: syndicateWp
+            })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            showToast(data.message || 'Update published to Google Business Profile!', 'success');
+            loadGmbUpdates();
+            loadPosts();
+            loadOverview();
+        } else {
+            showToast(data.error || 'Failed to publish update', 'error');
+        }
+    } catch (e) {
+        showToast('Network error publishing Google update', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
+    }
+}
+
+async function loadGmbUpdates() {
+    const container = document.getElementById('gmbPublishedUpdatesFeed');
+    if (!container) return;
+
+    try {
+        const res = await fetch('api.php?action=get_gmb_updates');
+        const data = await res.json();
+
+        if (!data.success || !data.updates || data.updates.length === 0) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 36px 20px; color: var(--text-dim);">
+                    <i class="fab fa-google" style="font-size: 2.2rem; margin-bottom: 12px; color: #4285F4; opacity: 0.6;"></i>
+                    <p style="font-size: 0.9rem; margin: 0;">No updates published yet. Create and publish your first Google Maps update above!</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = data.updates.map((u, idx) => {
+            const timeStr = u.published_at ? new Date(u.published_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recently';
+            const imgHtml = u.image_url ? `<img src="${u.image_url}" class="gmb-history-thumb" alt="Update Image" onerror="this.style.display='none'">` : `<div class="gmb-history-thumb" style="display:flex;align-items:center;justify-content:center;background:#1E293B;color:#4285F4;"><i class="fab fa-google"></i></div>`;
+            const mapsUrl = u.maps_url || 'https://www.google.com/maps?cid=4452102759555494648';
+
+            return `
+                <div class="gmb-history-card">
+                    ${imgHtml}
+                    <div class="gmb-history-content">
+                        <div class="gmb-history-headline">${escapeHtml(u.headline || 'Google Maps Update')}</div>
+                        <div class="gmb-history-snippet">${escapeHtml(u.content || '')}</div>
+                        <div class="gmb-history-meta">
+                            <span><i class="far fa-clock"></i> ${timeStr}</span>
+                            <span class="status-pill success" style="font-size: 0.7rem;"><i class="fas fa-check-circle"></i> Live on Google Profile</span>
+                            ${u.cta_url ? `<span style="color: #60a5fa;"><i class="fas fa-link"></i> ${escapeHtml(u.cta_type || 'Button')}: <a href="${u.cta_url}" target="_blank" style="color: #93c5fd; text-decoration: underline;">${escapeHtml(u.cta_url)}</a></span>` : ''}
+                        </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
+                        <a href="${mapsUrl}" target="_blank" class="btn btn-outline btn-sm" style="color: #4285F4; border-color: rgba(66, 133, 244, 0.4); font-size: 0.75rem; text-decoration: none; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-map-marked-alt"></i> View on Maps ↗
+                        </a>
+                        ${u.wp_link ? `<a href="${u.wp_link}" target="_blank" class="btn btn-outline btn-sm" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); font-size: 0.75rem; text-decoration: none; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;"><i class="fab fa-wordpress"></i> Blog Link ↗</a>` : ''}
+                        <button class="btn btn-outline btn-sm" onclick="deleteGmbUpdate('${u.id || ''}', ${idx})" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3); font-size: 0.75rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (e) {
+        container.innerHTML = `<div style="padding: 20px; color: #ef4444; text-align: center;">Error loading updates feed.</div>`;
+    }
+}
+
+async function deleteGmbUpdate(id, idx) {
+    if (!confirm('Are you sure you want to remove this update entry?')) return;
+
+    try {
+        const res = await fetch('api.php?action=delete_gmb_update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, index: idx })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Update removed from feed', 'success');
+            loadGmbUpdates();
+        } else {
+            showToast(data.error || 'Failed to remove update', 'error');
+        }
+    } catch (e) {
+        showToast('Network error deleting update', 'error');
+    }
+}
+
 
 async function generateAiPostBody() {
     const topic = document.getElementById('postTitleInput')?.value?.trim() || '';

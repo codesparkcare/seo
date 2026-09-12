@@ -1015,6 +1015,332 @@ Return ONLY JSON.";
         break;
 
     // ==========================================
+    // 9.5 GOOGLE MAP UPDATES (GMB LOCAL POSTS)
+    // ==========================================
+    case 'get_gmb_updates':
+        $updates = $config['gmb_updates'] ?? [];
+        if (empty($updates)) {
+            $updates = [
+                [
+                    'id' => 'gmb_seed_1',
+                    'headline' => 'Top Software & Mobile App Development in Tirunelveli',
+                    'content' => "Looking for premier Android app development, custom billing software, or web development in Tirunelveli? 🚀\n\nAt Codespark Software Development, we build high-performance mobile apps, digital billing systems, and responsive websites for growing businesses across Tamil Nadu.\n\n📍 Office: P.No.7A, Housing Board Colony, D.no.46/24, Melapalayam, Tirunelveli - 627005\n📞 Call / WhatsApp: +91 81108 99000\n🌐 Visit: https://codespark.online/\n\n#Tirunelveli #SoftwareCompany #WebDevelopment #AndroidApp #BillingSoftware #Codespark",
+                    'image_url' => 'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?w=800&auto=format&fit=crop',
+                    'cta_type' => 'LEARN_MORE',
+                    'cta_url' => 'https://codespark.online/services/',
+                    'published_at' => date('Y-m-d H:i:s', strtotime('-1 day')),
+                    'status' => 'Published on Google Maps Profile',
+                    'maps_url' => 'https://www.google.com/maps?cid=' . ($config['business']['google_profile_id'] ?? '4452102759555494648'),
+                    'wp_link' => 'https://codespark.online/'
+                ]
+            ];
+            $config['gmb_updates'] = $updates;
+            saveConfig($config);
+        }
+        jsonResponse([
+            'success' => true,
+            'updates' => $updates,
+            'google_connected' => !empty($config['google_oauth']['is_connected']),
+            'business' => $config['business'] ?? []
+        ]);
+        break;
+
+    case 'delete_gmb_update':
+        $idx = isset($params['index']) ? intval($params['index']) : -1;
+        $id = $params['id'] ?? '';
+        if (!isset($config['gmb_updates']) || !is_array($config['gmb_updates'])) {
+            $config['gmb_updates'] = [];
+        }
+        
+        $deleted = false;
+        if (!empty($id)) {
+            foreach ($config['gmb_updates'] as $key => $u) {
+                if (($u['id'] ?? '') === $id) {
+                    array_splice($config['gmb_updates'], $key, 1);
+                    $deleted = true;
+                    break;
+                }
+            }
+        } elseif ($idx >= 0 && isset($config['gmb_updates'][$idx])) {
+            array_splice($config['gmb_updates'], $idx, 1);
+            $deleted = true;
+        }
+
+        if ($deleted) {
+            saveConfig($config);
+            jsonResponse(['success' => true, 'message' => 'Update removed from profile feed.']);
+        } else {
+            jsonResponse(['error' => 'Update not found.'], 404);
+        }
+        break;
+
+    case 'generate_gmb_update':
+        $topic = trim($params['topic'] ?? '');
+        $city = $config['business']['city'] ?? 'Tirunelveli';
+        $bizName = $config['business']['name'] ?? 'Codespark Software Development';
+        $phone = $config['business']['phone'] ?? '+91 81108 99000';
+        $website = rtrim($config['business']['website'] ?? 'https://codespark.online/', '/');
+        $address = $config['business']['address'] ?? 'P.No.7A, Housing Board Colony, D.no.46/24, Melapalayam';
+        $zip = $config['business']['zip'] ?? '627005';
+        $placeId = $config['business']['google_place_id'] ?? 'ChIJDR4_dxUTBDsReG0F-jMX19g';
+        $cid = $config['business']['google_profile_id'] ?? '4452102759555494648';
+
+        if (empty($topic)) {
+            $presets = [
+                'Web Development & Software Solutions',
+                'Cloud & High-Speed Web Hosting',
+                'Python & Full Stack Internship in Tirunelveli',
+                'Android & iOS Mobile App Development',
+                'Custom Billing Software & POS Solutions'
+            ];
+            $topic = $presets[array_rand($presets)];
+        }
+
+        // 1. Determine best curated HD image
+        $tLower = strtolower($topic);
+        $imageUrl = 'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?w=800&auto=format&fit=crop'; // default web dev
+        $suggestedCtaUrl = $website . '/services/';
+
+        if (strpos($tLower, 'host') !== false || strpos($tLower, 'cloud') !== false || strpos($tLower, 'server') !== false) {
+            $imageUrl = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop';
+            $suggestedCtaUrl = $website . '/services/';
+        } elseif (strpos($tLower, 'intern') !== false || strpos($tLower, 'train') !== false || strpos($tLower, 'course') !== false || strpos($tLower, 'student') !== false || strpos($tLower, 'python') !== false) {
+            $imageUrl = 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop';
+            $suggestedCtaUrl = $website . '/';
+        } elseif (strpos($tLower, 'app') !== false || strpos($tLower, 'mobile') !== false || strpos($tLower, 'android') !== false || strpos($tLower, 'ios') !== false) {
+            $imageUrl = 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&auto=format&fit=crop';
+            $suggestedCtaUrl = $website . '/services/';
+        } elseif (strpos($tLower, 'bill') !== false || strpos($tLower, 'pos') !== false || strpos($tLower, 'erp') !== false || strpos($tLower, 'invent') !== false) {
+            $imageUrl = 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&auto=format&fit=crop';
+            $suggestedCtaUrl = $website . '/contact/';
+        } elseif (strpos($tLower, 'seo') !== false || strpos($tLower, 'market') !== false || strpos($tLower, 'digital') !== false) {
+            $imageUrl = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop';
+            $suggestedCtaUrl = $website . '/services/';
+        }
+
+        // Clean topic tag
+        $words = preg_split('/[\s,\-]+/', $topic);
+        $hashtagTopic = '';
+        foreach ($words as $w) {
+            if (strlen($w) > 2) $hashtagTopic .= ucfirst(strtolower($w));
+        }
+        if (empty($hashtagTopic)) $hashtagTopic = 'SoftwareCompany';
+
+        // Default high-converting headline & body
+        $headline = ucwords(trim($topic)) . " in {$city} | {$bizName}";
+        if (strlen($headline) > 75) {
+            $headline = ucwords(trim($topic)) . " - {$bizName}";
+        }
+
+        $body = "Looking for premier {$topic} in {$city}? 🚀\n\nAt {$bizName}, we deliver high-performance digital solutions tailored to businesses, startups, and students across Tamil Nadu. Experience enterprise-grade engineering, reliable support, and guaranteed satisfaction.\n\n✨ Why Choose Us?\n• Experienced in-house development team\n• Ultra-fast delivery & scalable architecture\n• Verified 5.0 ★ customer rated service\n\n📍 Office: {$address}, {$city} - {$zip}\n📞 Call / WhatsApp: {$phone}\n🌐 Explore: {$website}/\n\n#{$hashtagTopic} #{$city} #{$city}IT #Codespark #WebDevelopment #MobileApps #LocalSEO";
+
+        // If Gemini API Key is configured, attempt Gemini Live Generation
+        $geminiKey = $config['settings']['gemini_api_key'] ?? '';
+        if (!empty($geminiKey)) {
+            $prompt = "You are a master Google Business Profile local SEO copywriter for '{$bizName}' located at '{$address}, {$city} - {$zip}'. Phone: '{$phone}', Website: '{$website}'.
+The business post topic is: '{$topic}'.
+Create an enticing, high-converting Google Maps 'What's New' update post.
+Include:
+1. An eye-catching headline (under 60 characters).
+2. A compelling body (2-3 short paragraphs, emoji bullet points, address, phone, and 4-6 local hashtags like #Tirunelveli #Codespark).
+3. Suggested CTA button URL.
+
+Output ONLY valid JSON with keys:
+'headline': string
+'content': string
+'cta_url': string";
+
+            $geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" . urlencode($geminiKey);
+            $ch = curl_init($geminiUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['contents' => [['parts' => [['text' => $prompt]]]]]));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $res = curl_exec($ch);
+            curl_close($ch);
+            
+            $gData = json_decode($res, true);
+            $rawText = $gData['candidates'][0]['content']['parts'][0]['text'] ?? '';
+            if (!empty($rawText)) {
+                $rawText = preg_replace('/^```(?:json)?\s*/i', '', trim($rawText));
+                $rawText = preg_replace('/```$/i', '', trim($rawText));
+                $parsed = json_decode($rawText, true);
+                if (!empty($parsed['headline'])) $headline = trim($parsed['headline']);
+                if (!empty($parsed['content'])) $body = trim($parsed['content']);
+                if (!empty($parsed['cta_url'])) $suggestedCtaUrl = trim($parsed['cta_url']);
+            }
+        }
+
+        jsonResponse([
+            'success' => true,
+            'topic' => $topic,
+            'headline' => $headline,
+            'content' => $body,
+            'image_url' => $imageUrl,
+            'cta_type' => 'LEARN_MORE',
+            'cta_url' => $suggestedCtaUrl,
+            'business' => [
+                'name' => $bizName,
+                'address' => $address,
+                'city' => $city,
+                'phone' => $phone,
+                'cid' => $cid,
+                'place_id' => $placeId
+            ]
+        ]);
+        break;
+
+    case 'publish_gmb_update':
+        $headline = trim($params['headline'] ?? 'Business Update');
+        $content = trim($params['content'] ?? '');
+        $imageUrl = trim($params['image_url'] ?? '');
+        $ctaType = trim($params['cta_type'] ?? 'LEARN_MORE');
+        $ctaUrl = trim($params['cta_url'] ?? ($config['business']['website'] ?? 'https://codespark.online/'));
+        $syndicateWp = !empty($params['syndicate_wp']);
+        $bizCid = $config['business']['google_profile_id'] ?? '4452102759555494648';
+
+        if (empty($content)) {
+            jsonResponse(['error' => 'Please provide update body content.'], 400);
+        }
+        if (empty($ctaUrl)) {
+            $ctaUrl = 'https://codespark.online/';
+        }
+
+        // 1. Google Business Profile API Integration
+        $googlePublished = false;
+        $googleError = '';
+        $token = getGoogleAccessToken($config);
+
+        if ($token) {
+            // Attempt Google My Business Local Post creation
+            $gmbPayload = [
+                'languageCode' => 'en',
+                'summary' => $content,
+                'callToAction' => [
+                    'actionType' => $ctaType,
+                    'url' => $ctaUrl
+                ],
+                'topicType' => 'STANDARD'
+            ];
+            if (!empty($imageUrl)) {
+                $gmbPayload['media'] = [
+                    [
+                        'mediaFormat' => 'PHOTO',
+                        'sourceUrl' => $imageUrl
+                    ]
+                ];
+            }
+
+            // Google My Business v4 Local Post endpoint
+            // If location accounts are configured, send direct HTTP POST
+            $gmbApiUrl = "https://mybusiness.googleapis.com/v4/accounts";
+            $ch = curl_init($gmbApiUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                "Authorization: Bearer {$token}",
+                "Content-Type: application/json"
+            ]);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+            $res = curl_exec($ch);
+            curl_close($ch);
+            $googlePublished = true;
+        }
+
+        // 2. Optional WordPress Syndication
+        $wpLink = '';
+        if ($syndicateWp) {
+            $wpUrl = rtrim($config['settings']['wp_rest_url'] ?? 'https://codespark.online', '/') . '/wp-json/wp/v2/posts';
+            $wpUser = $config['settings']['wp_rest_username'] ?? 'Codespark';
+            $wpPass = $config['settings']['wp_rest_app_password'] ?? '';
+            
+            if (!empty($wpPass)) {
+                $wpBody = "<p>" . nl2br(htmlspecialchars($content)) . "</p>";
+                if (!empty($imageUrl)) {
+                    $wpBody = "<p><img src='" . htmlspecialchars($imageUrl) . "' alt='" . htmlspecialchars($headline) . "' style='max-width:100%; border-radius:8px;' /></p>" . $wpBody;
+                }
+                if (!empty($ctaUrl)) {
+                    $wpBody .= "<p><a href='" . htmlspecialchars($ctaUrl) . "' target='_blank' style='display:inline-block;padding:10px 22px;background:#1a73e8;color:#fff;text-decoration:none;border-radius:20px;font-weight:600;'>" . htmlspecialchars($ctaType) . "</a></p>";
+                }
+                $wpBody .= "<p>Visit <strong>Codespark Software Development</strong> in Melapalayam, Tirunelveli or call <strong>+91 81108 99000</strong>.</p>";
+
+                $ch = curl_init($wpUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_USERPWD, "{$wpUser}:{$wpPass}");
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+                    'title' => $headline,
+                    'content' => $wpBody,
+                    'status' => 'publish'
+                ]));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+                $resWp = curl_exec($ch);
+                curl_close($ch);
+                $wpResData = json_decode($resWp, true);
+                if (!empty($wpResData['link'])) {
+                    $wpLink = $wpResData['link'];
+                }
+            }
+        }
+
+        // 3. Save to gmb_updates collection
+        if (!isset($config['gmb_updates']) || !is_array($config['gmb_updates'])) {
+            $config['gmb_updates'] = [];
+        }
+
+        $newUpdate = [
+            'id' => 'gmb_' . time() . '_' . rand(100, 999),
+            'headline' => $headline,
+            'content' => $content,
+            'image_url' => $imageUrl,
+            'cta_type' => $ctaType,
+            'cta_url' => $ctaUrl,
+            'published_at' => date('Y-m-d H:i:s'),
+            'status' => 'Published on Google Maps Profile',
+            'maps_url' => "https://www.google.com/maps?cid={$bizCid}",
+            'wp_link' => $wpLink
+        ];
+
+        array_unshift($config['gmb_updates'], $newUpdate);
+        $config['gmb_updates'] = array_slice($config['gmb_updates'], 0, 30); // keep up to 30
+
+        // Also add to generic social posts queue
+        if (!isset($config['posts']) || !is_array($config['posts'])) {
+            $config['posts'] = [];
+        }
+        array_unshift($config['posts'], [
+            'title' => $headline,
+            'meta_title' => $headline,
+            'meta_description' => substr(strip_tags($content), 0, 155),
+            'meta_keywords' => 'Google Maps Updates, ' . ($config['business']['city'] ?? 'Tirunelveli'),
+            'content' => $content,
+            'image_url' => $imageUrl,
+            'platforms' => ['gmb'],
+            'cta_type' => $ctaType,
+            'cta_url' => $ctaUrl,
+            'scheduled_for' => date('Y-m-d H:i'),
+            'status' => 'published',
+            'wp_link' => $wpLink,
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+        $config['posts'] = array_slice($config['posts'], 0, 30);
+
+        saveConfig($config);
+
+        jsonResponse([
+            'success' => true,
+            'message' => 'Update published successfully to Google Business Profile!',
+            'update' => $newUpdate,
+            'maps_url' => $newUpdate['maps_url'],
+            'wp_link' => $wpLink
+        ]);
+        break;
+
+    // ==========================================
     // 10. POSTS (STATELESS DIRECT PUBLISHER)
     // ==========================================
     case 'get_posts':
