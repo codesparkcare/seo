@@ -1064,6 +1064,42 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                 </button>
             </div>
         </div>
+<!-- GOOGLE UPDATE PUBLISH MODAL -->
+<div id="gmbUpdateModal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-active); border-radius: var(--radius-md); max-width: 580px; width: 100%; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px;">
+            <h3 style="margin:0; font-size: 1.15rem; display:flex; align-items:center; gap:8px;">
+                <i class="fab fa-google" style="color: #4285F4;"></i> Post Update to Google Business Profile
+            </h3>
+            <button onclick="closeGmbUpdateModal()" style="background:transparent; border:none; color: var(--text-dim); font-size: 1.2rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+        </div>
+
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+            Your post text is ready below. Choose which Google link to open, click <strong>"+ Add update"</strong> on your profile, and paste (<kbd>Ctrl+V</kbd> / <kbd>Cmd+V</kbd>).
+        </p>
+
+        <div class="form-group" style="margin-bottom: 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+                <label class="form-label" style="font-size:0.8rem; margin:0;">Post Text (Ready to Paste)</label>
+                <button type="button" class="btn btn-outline btn-sm" onclick="copyGmbModalText()" style="padding: 2px 10px; font-size: 0.72rem; color: #34d399; border-color: rgba(52,211,153,0.3);">
+                    <i class="fas fa-copy"></i> Copy Text
+                </button>
+            </div>
+            <textarea class="form-control" id="gmbModalText" rows="6" style="font-size: 0.85rem; line-height: 1.4;"></textarea>
+        </div>
+
+        <div style="display:flex; flex-direction: column; gap: 10px; margin-top: 16px;">
+            <a id="btnGmbLinkMaps" href="https://maps.google.com/?cid=4452102759555494648" target="_blank" class="btn btn-primary" style="justify-content:center; text-decoration:none; background: linear-gradient(135deg, #4285F4, #1a73e8);">
+                <i class="fas fa-map-marker-alt"></i> 1. Open Codespark on Google Maps Listing ↗
+            </a>
+            <a id="btnGmbLinkSearch" href="https://www.google.com/search?q=my+business" target="_blank" class="btn btn-outline" style="justify-content:center; text-decoration:none; border-color: rgba(66,133,244,0.4); color: #60a5fa;">
+                <i class="fab fa-google"></i> 2. Open Google Business Profile Manager ('my business') ↗
+            </a>
+        </div>
+        
+        <div style="display:flex; justify-content:flex-end; margin-top: 16px;">
+            <button class="btn btn-outline btn-sm" onclick="closeGmbUpdateModal()">Close</button>
+        </div>
     </div>
 </div>
 

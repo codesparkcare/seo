@@ -1043,9 +1043,9 @@ async function loadPosts() {
                             </div>
                             <div style="display:flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 ${wpLinkHtml}
-                                <a href="https://www.google.com/search?q=Codespark+Software+Development+Melapalayam" target="_blank" onclick="copyPostToClipboard(event, ${idx})" class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 0.75rem; color: #4285F4; border-color: rgba(66,133,244,0.4); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;" title="Copy text & Open Google Business Profile to Add update">
+                                <button class="btn btn-outline btn-sm" onclick="openGmbUpdateModal(${idx})" style="padding: 4px 8px; font-size: 0.75rem; color: #4285F4; border-color: rgba(66,133,244,0.4);" title="Post update to Google Business Profile">
                                     <i class="fab fa-google"></i> Google Update ↗
-                                </a>
+                                </button>
                                 <a href="${fbUrl}" target="_blank" class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 0.75rem; color: #1877F2; border-color: rgba(24,119,242,0.3);" title="Share to Facebook">
                                     <i class="fab fa-facebook-f"></i> Share
                                 </a>
@@ -1128,25 +1128,39 @@ async function deletePostEntry(index) {
     }
 }
 
-function copyPostToClipboard(e, idx) {
+function openGmbUpdateModal(idx) {
     const post = (AppState.posts || [])[idx];
     if (!post) {
         showToast('Post content not found', 'warning');
         return;
     }
     const textToCopy = (post.title ? post.title + "\n\n" : '') + (post.content || '');
+    const textarea = document.getElementById('gmbModalText');
+    if (textarea) textarea.value = textToCopy;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(textToCopy);
-    } else {
-        const ta = document.createElement('textarea');
-        ta.value = textToCopy;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
     }
-    showToast('Post text copied! Click "+ Add update" on Google and paste.', 'success');
+
+    const modal = document.getElementById('gmbUpdateModal');
+    if (modal) modal.style.display = 'flex';
+    showToast('Post text copied to clipboard! Opening options...', 'info');
+}
+
+function closeGmbUpdateModal() {
+    const modal = document.getElementById('gmbUpdateModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function copyGmbModalText() {
+    const text = document.getElementById('gmbModalText')?.value || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Post text copied to clipboard!', 'success');
+        });
+    } else {
+        showToast('Post copied!', 'success');
+    }
 }
 
 async function generateAiPostBody() {
