@@ -1030,7 +1030,7 @@ Return ONLY JSON.";
                     'cta_url' => 'https://codespark.online/services/',
                     'published_at' => date('Y-m-d H:i:s', strtotime('-1 day')),
                     'status' => 'Published on Google Maps Profile',
-                    'maps_url' => 'https://www.google.com/maps?cid=' . ($config['business']['google_profile_id'] ?? '4452102759555494648'),
+                    'maps_url' => 'https://www.google.com/maps/search/?api=1&query=' . urlencode($config['business']['name'] ?? 'Codespark Software Development') . '&query_place_id=' . urlencode($config['business']['google_place_id'] ?? 'ChIJDR4_dxUTBDsReG0F-jMX19g'),
                     'wp_link' => 'https://codespark.online/'
                 ]
             ];
@@ -1199,7 +1199,7 @@ Output ONLY valid JSON with keys:
         $ctaType = trim($params['cta_type'] ?? 'LEARN_MORE');
         $ctaUrl = trim($params['cta_url'] ?? ($config['business']['website'] ?? 'https://codespark.online/'));
         $syndicateWp = !empty($params['syndicate_wp']);
-        $bizCid = $config['business']['google_profile_id'] ?? '4452102759555494648';
+        $bizCid = $config['business']['google_profile_id'] ?? '15624982944190655864';
 
         if (empty($content)) {
             jsonResponse(['error' => 'Please provide update body content.'], 400);
@@ -1301,7 +1301,7 @@ Output ONLY valid JSON with keys:
             'cta_url' => $ctaUrl,
             'published_at' => date('Y-m-d H:i:s'),
             'status' => 'Published on Google Maps Profile',
-            'maps_url' => "https://www.google.com/maps?cid={$bizCid}",
+            'maps_url' => 'https://www.google.com/maps/search/?api=1&query=' . urlencode(($config['business']['name'] ?? 'Codespark Software Development') . ' ' . ($config['business']['address'] ?? 'Melapalayam')) . '&query_place_id=' . urlencode($config['business']['google_place_id'] ?? 'ChIJDR4_dxUTBDsReG0F-jMX19g'),
             'wp_link' => $wpLink
         ];
 

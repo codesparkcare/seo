@@ -1403,7 +1403,10 @@ async function loadGmbUpdates() {
         container.innerHTML = data.updates.map((u, idx) => {
             const timeStr = u.published_at ? new Date(u.published_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recently';
             const imgHtml = u.image_url ? `<img src="${u.image_url}" class="gmb-history-thumb" alt="Update Image" onerror="this.style.display='none'">` : `<div class="gmb-history-thumb" style="display:flex;align-items:center;justify-content:center;background:#1E293B;color:#4285F4;"><i class="fab fa-google"></i></div>`;
-            const mapsUrl = u.maps_url || 'https://www.google.com/maps?cid=4452102759555494648';
+            let mapsUrl = u.maps_url || '';
+            if (!mapsUrl || mapsUrl.includes('4452102759555494648')) {
+                mapsUrl = 'https://www.google.com/maps/search/?api=1&query=Codespark+Software+Development+Melapalayam+Tirunelveli&query_place_id=ChIJDR4_dxUTBDsReG0F-jMX19g';
+            }
 
             return `
                 <div class="gmb-history-card">
@@ -1414,14 +1417,14 @@ async function loadGmbUpdates() {
                         <div class="gmb-history-meta">
                             <span><i class="far fa-clock"></i> ${timeStr}</span>
                             <span class="status-pill success" style="font-size: 0.7rem;"><i class="fas fa-check-circle"></i> Live on Google Profile</span>
-                            ${u.cta_url ? `<span style="color: #60a5fa;"><i class="fas fa-link"></i> ${escapeHtml(u.cta_type || 'Button')}: <a href="${u.cta_url}" target="_blank" style="color: #93c5fd; text-decoration: underline;">${escapeHtml(u.cta_url)}</a></span>` : ''}
+                            ${u.cta_url ? `<span style="color: #60a5fa;"><i class="fas fa-link"></i> ${escapeHtml(u.cta_type || 'Button')}: <a href="${u.cta_url}" target="_blank" rel="noopener noreferrer" style="color: #93c5fd; text-decoration: underline;">${escapeHtml(u.cta_url)}</a></span>` : ''}
                         </div>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 8px; flex-shrink: 0;">
-                        <a href="${mapsUrl}" target="_blank" class="btn btn-outline btn-sm" style="color: #4285F4; border-color: rgba(66, 133, 244, 0.4); font-size: 0.75rem; text-decoration: none; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;">
+                        <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" onclick="window.open('${mapsUrl}', '_blank'); return false;" class="btn btn-outline btn-sm" style="color: #4285F4; border-color: rgba(66, 133, 244, 0.4); font-size: 0.75rem; text-decoration: none; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;" title="Open Codespark on Google Maps">
                             <i class="fas fa-map-marked-alt"></i> View on Maps ↗
                         </a>
-                        ${u.wp_link ? `<a href="${u.wp_link}" target="_blank" class="btn btn-outline btn-sm" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); font-size: 0.75rem; text-decoration: none; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;"><i class="fab fa-wordpress"></i> Blog Link ↗</a>` : ''}
+                        ${u.wp_link ? `<a href="${u.wp_link}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); font-size: 0.75rem; text-decoration: none; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;"><i class="fab fa-wordpress"></i> Blog Link ↗</a>` : ''}
                         <button class="btn btn-outline btn-sm" onclick="deleteGmbUpdate('${u.id || ''}', ${idx})" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3); font-size: 0.75rem; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px;">
                             <i class="fas fa-trash-alt"></i> Delete
                         </button>

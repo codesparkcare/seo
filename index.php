@@ -780,15 +780,15 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                             </span>
                         </div>
                         <p style="margin: 4px 0 0; font-size: 0.82rem; color: var(--text-muted);">
-                            <strong>Codespark Software Development</strong> (Melapalayam, Tirunelveli - 627005) · Place ID: <code style="color: #93c5fd;">ChIJDR4_dxUTBDsReG0F-jMX19g</code> · CID: <code style="color: #93c5fd;">4452102759555494648</code>
+                            <strong>Codespark Software Development</strong> (Melapalayam, Tirunelveli - 627005) · Place ID: <code style="color: #93c5fd;">ChIJDR4_dxUTBDsReG0F-jMX19g</code> · CID: <code style="color: #93c5fd;">15624982944190655864</code>
                         </p>
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <a href="https://www.google.com/maps?cid=4452102759555494648" target="_blank" class="btn btn-outline btn-sm" style="border-color: rgba(66, 133, 244, 0.4); color: #60a5fa; text-decoration:none;">
+                    <a href="https://www.google.com/maps/search/?api=1&query=Codespark+Software+Development+Melapalayam+Tirunelveli&query_place_id=ChIJDR4_dxUTBDsReG0F-jMX19g" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="border-color: rgba(66, 133, 244, 0.4); color: #60a5fa; text-decoration:none;">
                         <i class="fas fa-map-marked-alt"></i> View on Google Maps ↗
                     </a>
-                    <a href="https://business.google.com/" target="_blank" class="btn btn-outline btn-sm" style="border-color: rgba(255,255,255,0.2); color: var(--text-muted); text-decoration:none;">
+                    <a href="https://business.google.com/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="border-color: rgba(255,255,255,0.2); color: var(--text-muted); text-decoration:none;">
                         <i class="fab fa-google"></i> Business Manager ↗
                     </a>
                 </div>
