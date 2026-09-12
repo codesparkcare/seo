@@ -320,7 +320,7 @@ async function loadReviews() {
         // Review Collection Link & QR Code
         let reviewUrl = '';
         const customUrl = AppState.profile?.google_review_url;
-        const placeId = AppState.profile?.google_profile_id || AppState.profile?.google_place_id || '4452102759555494648';
+        const placeId = AppState.profile?.google_place_id || 'ChIJDR4_dxUTBDsReG0F-jMX19g';
 
         if (customUrl && (customUrl.startsWith('http://') || customUrl.startsWith('https://'))) {
             reviewUrl = customUrl;
@@ -329,7 +329,7 @@ async function loadReviews() {
         } else if (placeId && /^\d+$/.test(placeId)) {
             reviewUrl = `https://maps.google.com/?cid=${placeId}`;
         } else {
-            reviewUrl = `https://maps.google.com/?cid=4452102759555494648`;
+            reviewUrl = `https://search.google.com/local/writereview?placeid=ChIJDR4_dxUTBDsReG0F-jMX19g`;
         }
 
         const linkInput = document.getElementById('reviewLinkInput');
@@ -342,7 +342,7 @@ async function loadReviews() {
 }
 
 function updateReviewQrLive(overrideUrl) {
-    const link = overrideUrl || document.getElementById('reviewLinkInput')?.value?.trim() || 'https://maps.google.com/?cid=4452102759555494648';
+    const link = overrideUrl || document.getElementById('reviewLinkInput')?.value?.trim() || 'https://search.google.com/local/writereview?placeid=ChIJDR4_dxUTBDsReG0F-jMX19g';
     const qrImg = document.getElementById('reviewQrCodeImg');
     if (qrImg) {
         qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(link)}`;
@@ -380,7 +380,7 @@ async function saveCustomReviewLink() {
 }
 
 function printCounterStandee() {
-    const link = document.getElementById('reviewLinkInput')?.value || 'https://maps.google.com/?cid=4452102759555494648';
+    const link = document.getElementById('reviewLinkInput')?.value || 'https://search.google.com/local/writereview?placeid=ChIJDR4_dxUTBDsReG0F-jMX19g';
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(link)}`;
     const bizName = AppState.profile?.name || 'Codespark Software Development';
     const city = AppState.profile?.city || 'Tirunelveli';

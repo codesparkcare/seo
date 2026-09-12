@@ -772,7 +772,7 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                     </div>
                     <div class="form-group">
                         <label class="form-label">Google Place ID</label>
-                        <input type="text" class="form-control" id="profPlaceId" value="<?= htmlspecialchars($profile['google_place_id'] ?? '') ?>">
+                        <input type="text" class="form-control" id="profPlaceId" value="<?= htmlspecialchars($profile['google_place_id'] ?? 'ChIJDR4_dxUTBDsReG0F-jMX19g') ?>">
                     </div>
                 </div>
 
