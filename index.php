@@ -1048,11 +1048,16 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
             <textarea class="form-control" id="modalReplyContent" rows="4"></textarea>
         </div>
 
-        <div style="display:flex; justify-content:flex-end; gap: 10px; margin-top: 18px;">
-            <button class="btn btn-outline" onclick="closeReplyModal()">Cancel</button>
-            <button class="btn btn-success" onclick="submitReviewReply()">
-                <i class="fas fa-check"></i> Approve & Sync to Google Maps
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 18px; flex-wrap: wrap; gap: 10px;">
+            <button class="btn btn-outline btn-sm" onclick="copyReplyAndOpenGoogle()" style="color: #4285F4; border-color: rgba(66,133,244,0.4);">
+                <i class="fas fa-copy"></i> Copy Reply & Open Google Maps ↗
             </button>
+            <div style="display:flex; gap: 10px;">
+                <button class="btn btn-outline" onclick="closeReplyModal()">Close</button>
+                <button class="btn btn-success" onclick="submitReviewReply()">
+                    <i class="fas fa-check"></i> Save Local SEO Reply
+                </button>
+            </div>
         </div>
     </div>
 </div>

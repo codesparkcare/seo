@@ -442,9 +442,15 @@ function renderReviewsTable() {
                 <td>
                     <div style="display:flex; align-items:center; gap:6px;">
                         ${isReplied ? `
-                            <button class="btn btn-outline btn-sm" onclick="openReplyModal(${r.id})">
-                                <i class="fas fa-edit"></i> Edit Reply
+                            <button class="btn btn-outline btn-sm" onclick="copyReviewReply(${r.id})" style="color: #4285F4; border-color: rgba(66,133,244,0.4);" title="Copy reply to clipboard">
+                                <i class="fas fa-copy"></i> Copy
                             </button>
+                            <button class="btn btn-outline btn-sm" onclick="openReplyModal(${r.id})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <a href="https://search.google.com/local/reviews?placeid=ChIJDR4_dxUTBDsReG0F-jMX19g" target="_blank" class="btn btn-outline btn-sm" style="padding:4px 8px; color:var(--text-dim);" title="Open Google Maps to paste reply">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
                         ` : `
                             <button class="btn btn-primary btn-sm" onclick="openReplyModal(${r.id})">
                                 <i class="fas fa-magic"></i> Auto-Generate Reply
@@ -732,7 +738,7 @@ async function submitReviewReply() {
                 rev.status = 'replied';
             }
             renderReviewsTable();
-            showToast('Reply published & synced to Google Business Profile!', 'success');
+            showToast('Reply saved locally in SEO engine!', 'success');
             closeReplyModal();
             loadOverview();
         } else {
@@ -741,6 +747,35 @@ async function submitReviewReply() {
     } catch (e) {
         showToast('Network error saving reply', 'error');
     }
+}
+
+function copyReviewReply(reviewId) {
+    const rev = (ReviewState.allReviews || []).find(r => r.id == reviewId);
+    if (!rev || !rev.ai_reply) {
+        showToast('No reply content to copy', 'warning');
+        return;
+    }
+    navigator.clipboard.writeText(rev.ai_reply).then(() => {
+        showToast('Reply copied to clipboard! Paste it into Google Maps.', 'success');
+    }).catch(() => {
+        showToast('Reply ready: ' + rev.ai_reply.substring(0, 30) + '...', 'info');
+    });
+}
+
+function copyReplyAndOpenGoogle() {
+    const reply = document.getElementById('modalReplyContent')?.value?.trim();
+    if (!reply) {
+        showToast('Please generate a reply first', 'warning');
+        return;
+    }
+    navigator.clipboard.writeText(reply).then(() => {
+        showToast('Reply copied to clipboard! Opening Google Maps...', 'success');
+        setTimeout(() => {
+            window.open('https://search.google.com/local/reviews?placeid=ChIJDR4_dxUTBDsReG0F-jMX19g', '_blank');
+        }, 400);
+    }).catch(() => {
+        window.open('https://search.google.com/local/reviews?placeid=ChIJDR4_dxUTBDsReG0F-jMX19g', '_blank');
+    });
 }
 
 // 4. WEBSITE ON-PAGE & TECHNICAL SEO AUDIT
