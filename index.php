@@ -607,8 +607,35 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                         <p style="font-size: 0.82rem; color: var(--text-muted); margin: 3px 0 0 0; line-height: 1.45;">Automatically creates an SEO article targeted for your Tirunelveli keywords and publishes live to your website.</p>
                     </div>
                     <div>
-                        <button class="btn btn-primary btn-sm" id="btnAutoPublishTabSocial" onclick="triggerAutoCreatePost()" style="box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
+                        <button class="btn btn-primary btn-sm" id="btnAutoPublishTabSocial" onclick="triggerAutoCreatePost(document.getElementById('wpKeywordSelect')?.value || '')" style="box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
                             <i class="fas fa-magic"></i> Auto-Generate & Publish Post
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 1: Select Target Keyword -->
+                <?php
+                $targetKeywordsRaw = $profile['target_keywords'] ?? 'Android App Development Company Tirunelveli, Near By App development company Tirunelveli, Internship Company Tirunelveli, IT company Tirunelveli, Software Company Tirunelveli, Best SEO Company Tirunelveli, Free Internship Company Tirunelveli, Web Development Company Tirunelveli, Billing Software Tirunelveli, Website Design Company Tirunelveli, Mobile App Developers in Tirunelveli, Custom Software Development Tirunelveli, Cloud Hosting Provider Tirunelveli, Digital Marketing Agency Tirunelveli, Best IT Solutions Tirunelveli, Software Training Institute Tirunelveli, Web Design Near Me Tirunelveli, E-commerce Website Development Tirunelveli, Top Software Internship Tirunelveli';
+                $targetKeywordsArr = array_values(array_filter(array_map('trim', explode(',', $targetKeywordsRaw))));
+                ?>
+                <div class="form-group" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(15, 23, 42, 0.6)); border: 1px solid rgba(59, 130, 246, 0.28); border-radius: 12px; padding: 16px 18px; margin-bottom: 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                        <label class="form-label" style="margin:0; font-size: 0.86rem; font-weight: 700; color: #F8FAFC; display:flex; align-items:center; gap: 8px;">
+                            <i class="fas fa-key" style="color: #60A5FA;"></i> 1. Select Target SEO Keyword
+                        </label>
+                        <span style="font-size: 0.74rem; color: #94A3B8;">Choose keyword to auto-craft post, SEO meta & featured image</span>
+                    </div>
+                    <div style="display:flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 260px;">
+                            <select class="form-control" id="wpKeywordSelect" onchange="onWpKeywordChange(this.value)" style="font-weight: 500; height: 42px;">
+                                <option value="">-- Choose Target Keyword (<?= count($targetKeywordsArr) ?> Loaded) --</option>
+                                <?php foreach ($targetKeywordsArr as $kw): ?>
+                                    <option value="<?= htmlspecialchars($kw) ?>"><?= htmlspecialchars($kw) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary" id="btnGenFullWpPost" onclick="generateFullWpPostFromKeyword()" style="padding: 10px 18px; font-size: 0.85rem; display:inline-flex; align-items:center; gap: 8px; white-space:nowrap; height: 42px;">
+                            <i class="fas fa-magic"></i> Auto-Generate Post
                         </button>
                     </div>
                 </div>
@@ -659,11 +686,44 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Featured Image URL</label>
-                        <input type="url" class="form-control" id="postImageInput" placeholder="https://images.unsplash.com/...">
+                <!-- Step 4: WordPress Featured Image Studio -->
+                <div class="form-group" style="background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 16px 18px; margin-bottom: 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                        <label class="form-label" style="margin:0; font-size: 0.85rem; font-weight: 700; color: #F8FAFC; display:flex; align-items:center; gap: 8px;">
+                            <i class="fas fa-image" style="color: #38BDF8;"></i> WordPress Featured Image
+                        </label>
+                        <span style="font-size: 0.74rem; color: #94A3B8;">Embedded into WordPress post & Google rich snippet schema</span>
                     </div>
+                    
+                    <div style="display: grid; grid-template-columns: 140px 1fr; gap: 16px; align-items: center;">
+                        <!-- Live Image Thumbnail Preview -->
+                        <div style="width: 140px; height: 95px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: #070a13; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative;">
+                            <img id="wpFeaturedImagePreview" src="https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&auto=format&fit=crop" alt="Featured Image Preview" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.style.display='none'; document.getElementById('wpImagePlaceholder').style.display='flex';">
+                            <div id="wpImagePlaceholder" style="display: none; flex-direction: column; align-items: center; justify-content: center; color: #64748B; font-size: 0.75rem; text-align: center; padding: 6px;">
+                                <i class="fas fa-image" style="font-size: 1.4rem; margin-bottom: 4px;"></i>
+                                No Image
+                            </div>
+                        </div>
+
+                        <!-- Image URL & Preset Selection -->
+                        <div>
+                            <input type="url" class="form-control" id="postImageInput" placeholder="https://images.unsplash.com/..." value="https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&auto=format&fit=crop" oninput="updateWpFeaturedImagePreview(this.value)" style="margin-bottom: 10px;">
+                            
+                            <!-- Quick Image Presets -->
+                            <div style="display:flex; align-items:center; gap: 8px; flex-wrap: wrap;">
+                                <span style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Presets:</span>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="setWpFeaturedImage('https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&auto=format&fit=crop', 'Mobile Apps')" style="padding: 3px 8px; font-size: 0.72rem;">📱 Mobile Apps</button>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="setWpFeaturedImage('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop', 'Internship')" style="padding: 3px 8px; font-size: 0.72rem;">🎓 Internship</button>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="setWpFeaturedImage('https://images.unsplash.com/photo-1547658719-da2b51169166?w=800&auto=format&fit=crop', 'Web Design')" style="padding: 3px 8px; font-size: 0.72rem;">💻 Web Design</button>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="setWpFeaturedImage('https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&auto=format&fit=crop', 'Billing POS')" style="padding: 3px 8px; font-size: 0.72rem;">🧾 Billing POS</button>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="setWpFeaturedImage('https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop', 'Cloud')" style="padding: 3px 8px; font-size: 0.72rem;">☁️ Cloud</button>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="setWpFeaturedImage('https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop', 'SEO')" style="padding: 3px 8px; font-size: 0.72rem;">📈 SEO</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Call-To-Action (CTA) Button</label>
                         <select class="form-control" id="postCtaSelect">
@@ -675,7 +735,7 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                     </div>
                     <div class="form-group">
                         <label class="form-label">CTA Target Destination Link</label>
-                        <input type="url" class="form-control" id="postCtaUrlInput" placeholder="https://example.com/contact">
+                        <input type="url" class="form-control" id="postCtaUrlInput" placeholder="https://codespark.online/contact/" value="https://codespark.online/contact/">
                     </div>
                 </div>
 

@@ -1745,6 +1745,102 @@ async function generateAiPostBody() {
     }
 }
 
+function onWpKeywordChange(keyword) {
+    if (!keyword) return;
+    const titleEl = document.getElementById('postTitleInput');
+    if (titleEl) {
+        titleEl.value = `Top ${keyword} - Codespark Software Development`;
+    }
+    const metaKwEl = document.getElementById('postMetaKeywordsInput');
+    if (metaKwEl) {
+        metaKwEl.value = `${keyword}, Codespark Software Development, Tirunelveli IT Company, Best Software Services`;
+    }
+    // Auto-match relevant featured image preset
+    const kw = keyword.toLowerCase();
+    let img = 'https://images.unsplash.com/photo-1547658719-da2b51169166?w=1200&auto=format&fit=crop';
+    if (kw.includes('app') || kw.includes('mobile')) {
+        img = 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=1200&auto=format&fit=crop';
+    } else if (kw.includes('intern') || kw.includes('training') || kw.includes('python')) {
+        img = 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&auto=format&fit=crop';
+    } else if (kw.includes('billing') || kw.includes('pos')) {
+        img = 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=1200&auto=format&fit=crop';
+    } else if (kw.includes('cloud') || kw.includes('hosting')) {
+        img = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop';
+    } else if (kw.includes('seo') || kw.includes('marketing')) {
+        img = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop';
+    }
+    setWpFeaturedImage(img, keyword);
+}
+
+function setWpFeaturedImage(url, label) {
+    const input = document.getElementById('postImageInput');
+    if (input) input.value = url;
+    updateWpFeaturedImagePreview(url);
+    if (label) showToast(`Featured image set for ${label}`, 'info');
+}
+
+function updateWpFeaturedImagePreview(url) {
+    const img = document.getElementById('wpFeaturedImagePreview');
+    const placeholder = document.getElementById('wpImagePlaceholder');
+    if (!img) return;
+    if (url && url.trim()) {
+        img.src = url.trim();
+        img.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+    } else {
+        img.style.display = 'none';
+        if (placeholder) placeholder.style.display = 'flex';
+    }
+}
+
+async function generateFullWpPostFromKeyword() {
+    const selectEl = document.getElementById('wpKeywordSelect');
+    const keyword = selectEl?.value || document.getElementById('postTitleInput')?.value?.trim();
+    if (!keyword) {
+        showToast('Please select a target keyword from the dropdown first!', 'warning');
+        selectEl?.focus();
+        return;
+    }
+
+    const btn = document.getElementById('btnGenFullWpPost');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Post...';
+    }
+
+    showToast(`Crafting complete SEO article for "${keyword}"...`, 'info');
+
+    try {
+        const res = await fetch('api.php?action=generate_post_body', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic: keyword })
+        });
+        const data = await res.json();
+        if (data.success) {
+            if (data.title && document.getElementById('postTitleInput')) document.getElementById('postTitleInput').value = data.title;
+            if (data.post_body && document.getElementById('postContentInput')) document.getElementById('postContentInput').value = data.post_body;
+            if (data.meta_title && document.getElementById('postMetaTitleInput')) document.getElementById('postMetaTitleInput').value = data.meta_title;
+            if (data.meta_description && document.getElementById('postMetaDescInput')) document.getElementById('postMetaDescInput').value = data.meta_description;
+            if (data.meta_keywords && document.getElementById('postMetaKeywordsInput')) document.getElementById('postMetaKeywordsInput').value = data.meta_keywords;
+            if (data.image_url) setWpFeaturedImage(data.image_url, keyword);
+
+            updateMetaCounters();
+            showToast(`Generated full post for "${keyword}"! Review & click Publish below.`, 'success');
+        } else {
+            showToast(data.error || 'Failed to generate post content', 'error');
+        }
+    } catch (e) {
+        showToast('Network error generating post content', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
+    }
+}
+
 async function generateAiSeoMeta() {
     const topic = document.getElementById('postTitleInput')?.value?.trim() || '';
     const content = document.getElementById('postContentInput')?.value?.trim() || '';
@@ -1874,6 +1970,10 @@ async function submitSocialPost(publishNow = false) {
 }
 
 async function triggerAutoCreatePost(keyword = '') {
+    if (!keyword) {
+        keyword = document.getElementById('wpKeywordSelect')?.value || '';
+    }
+    const imageUrl = document.getElementById('postImageInput')?.value?.trim() || '';
     const btn = event?.target?.closest('button');
     const origHtml = btn ? btn.innerHTML : '';
     if (btn) {
@@ -1881,13 +1981,13 @@ async function triggerAutoCreatePost(keyword = '') {
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> AI Generating & Publishing...';
     }
 
-    showToast('Gemini AI is generating & publishing post to codespark.online...', 'info');
+    showToast(`Gemini AI is crafting post${keyword ? ' for "' + keyword + '"' : ''} & publishing to codespark.online...`, 'info');
 
     try {
         const res = await fetch('api.php?action=auto_create_and_publish', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ keyword })
+            body: JSON.stringify({ keyword, image_url: imageUrl })
         });
         const data = await res.json();
         if (data.success) {

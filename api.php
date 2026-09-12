@@ -804,6 +804,31 @@ Return ONLY valid JSON.";
             }
         }
 
+        // Match or accept featured image for WordPress post
+        $kwLower = strtolower($chosenKw);
+        $imageUrl = trim($params['image_url'] ?? '');
+        if (empty($imageUrl)) {
+            if (strpos($kwLower, 'app') !== false || strpos($kwLower, 'mobile') !== false) {
+                $imageUrl = 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=1200&auto=format&fit=crop';
+            } elseif (strpos($kwLower, 'intern') !== false || strpos($kwLower, 'training') !== false || strpos($kwLower, 'python') !== false) {
+                $imageUrl = 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&auto=format&fit=crop';
+            } elseif (strpos($kwLower, 'billing') !== false || strpos($kwLower, 'pos') !== false) {
+                $imageUrl = 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=1200&auto=format&fit=crop';
+            } elseif (strpos($kwLower, 'cloud') !== false || strpos($kwLower, 'hosting') !== false) {
+                $imageUrl = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop';
+            } elseif (strpos($kwLower, 'seo') !== false) {
+                $imageUrl = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop';
+            } else {
+                $imageUrl = 'https://images.unsplash.com/photo-1547658719-da2b51169166?w=1200&auto=format&fit=crop';
+            }
+        }
+
+        $imageFigure = '';
+        if (!empty($imageUrl)) {
+            $imageFigure = "<figure class='wp-block-image size-large' style='margin:0 0 24px 0;'><img src='{$imageUrl}' alt='{$metaTitle}' class='wp-image-featured' style='width:100%;max-height:480px;object-fit:cover;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.1);'></figure>\n\n";
+        }
+        $contentWithImage = $imageFigure . $content;
+
         // Prepare Rich JSON-LD SEO Schema for Google indexing
         $schemaData = [
             '@context' => 'https://schema.org',
@@ -811,6 +836,7 @@ Return ONLY valid JSON.";
             'headline' => $metaTitle,
             'description' => $metaDescription,
             'keywords' => $metaKeywords,
+            'image' => $imageUrl,
             'datePublished' => date('c'),
             'dateModified' => date('c'),
             'mainEntityOfPage' => [
@@ -845,7 +871,7 @@ Return ONLY valid JSON.";
         $wpPostData = [
             'title' => $metaTitle,
             'excerpt' => $metaDescription,
-            'content' => $content . $schemaScript,
+            'content' => $contentWithImage . $schemaScript,
             'status' => 'publish',
             'meta' => [
                 'rank_math_title' => $metaTitle,
@@ -877,7 +903,7 @@ Return ONLY valid JSON.";
                 'meta_description' => $metaDescription,
                 'meta_keywords' => $metaKeywords,
                 'content' => strip_tags(substr($content, 0, 220)) . '...',
-                'image_url' => '',
+                'image_url' => $imageUrl,
                 'platforms' => ['wordpress', 'gmb', 'facebook', 'linkedin'],
                 'cta_type' => 'LEARN_MORE',
                 'cta_url' => $wpLink,
@@ -986,13 +1012,29 @@ Return ONLY JSON.";
                 if (!empty($parsed['meta_keywords'])) $metaKeywords = $parsed['meta_keywords'];
             }
         }
+        // Match high-quality featured image based on keyword
+        $kwLower = strtolower($topic);
+        $imageUrl = 'https://images.unsplash.com/photo-1547658719-da2b51169166?w=1200&auto=format&fit=crop';
+        if (strpos($kwLower, 'app') !== false || strpos($kwLower, 'mobile') !== false) {
+            $imageUrl = 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=1200&auto=format&fit=crop';
+        } elseif (strpos($kwLower, 'intern') !== false || strpos($kwLower, 'training') !== false || strpos($kwLower, 'python') !== false) {
+            $imageUrl = 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&auto=format&fit=crop';
+        } elseif (strpos($kwLower, 'billing') !== false || strpos($kwLower, 'pos') !== false) {
+            $imageUrl = 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=1200&auto=format&fit=crop';
+        } elseif (strpos($kwLower, 'cloud') !== false || strpos($kwLower, 'hosting') !== false) {
+            $imageUrl = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop';
+        } elseif (strpos($kwLower, 'seo') !== false) {
+            $imageUrl = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop';
+        }
 
         jsonResponse([
             'success' => true,
+            'title' => ucwords($baseTitle) . " - " . $bizName,
             'post_body' => $postBody,
             'meta_title' => $metaTitle,
             'meta_description' => $metaDesc,
-            'meta_keywords' => $metaKeywords
+            'meta_keywords' => $metaKeywords,
+            'image_url' => $imageUrl
         ]);
         break;
 
@@ -1399,14 +1441,18 @@ Output ONLY valid JSON with keys:
             $pass = $config['settings']['wp_rest_app_password'] ?? '';
             
             if (!empty($pass)) {
-                $postBody = "<p>" . nl2br(htmlspecialchars($content)) . "</p>";
+                $imageHtml = '';
+                if (!empty($imageUrl)) {
+                    $imageHtml = "<figure class='wp-block-image size-large' style='margin:0 0 24px 0;'><img src='" . htmlspecialchars($imageUrl) . "' alt='" . htmlspecialchars($metaTitle) . "' class='wp-image-featured' style='width:100%;max-height:480px;object-fit:cover;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.1);'></figure>\n\n";
+                }
+                $postBody = $imageHtml . "<p>" . nl2br(htmlspecialchars($content)) . "</p>";
                 if (!empty($ctaUrl)) {
-                    $postBody .= "<p><a href='" . htmlspecialchars($ctaUrl) . "' target='_blank' style='display:inline-block;padding:10px 20px;background:#6366f1;color:#fff;text-decoration:none;border-radius:6px;'>" . htmlspecialchars($ctaType) . "</a></p>";
+                    $postBody .= "<p><a href='" . htmlspecialchars($ctaUrl) . "' target='_blank' style='display:inline-block;padding:10px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;'>" . htmlspecialchars($ctaType) . "</a></p>";
                 }
                 $postBody .= "<p>Visit <strong>Codespark Software Development</strong> in Melapalayam, Tirunelveli or call <strong>+91 81108 99000</strong>.</p>";
                 
                 // Embed Rich JSON-LD SEO Schema
-                $schemaJson = json_encode([
+                $schemaArray = [
                     '@context' => 'https://schema.org',
                     '@type' => 'BlogPosting',
                     'headline' => $metaTitle,
@@ -1418,7 +1464,11 @@ Output ONLY valid JSON with keys:
                         'name' => 'Codespark Software Development',
                         'url' => 'https://codespark.online/'
                     ]
-                ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+                ];
+                if (!empty($imageUrl)) {
+                    $schemaArray['image'] = $imageUrl;
+                }
+                $schemaJson = json_encode($schemaArray, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 
                 $postBodyWithSchema = $postBody . "\n\n<script type=\"application/ld+json\">\n{$schemaJson}\n</script>";
 
