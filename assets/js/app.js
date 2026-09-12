@@ -10,7 +10,8 @@ const AppState = {
     currentTab: 'overview',
     map: null,
     markersLayer: null,
-    currentKeyword: 'local seo services'
+    currentKeyword: 'local seo services',
+    posts: []
 };
 
 // UI Helper: Toast Notifications
@@ -976,6 +977,7 @@ async function loadPosts() {
         const res = await fetch('api.php?action=get_posts');
         const data = await res.json();
         if (data.success) {
+            AppState.posts = data.posts || [];
             const list = document.getElementById('allPostsList');
             if (!list) return;
             if (data.posts.length === 0) {
@@ -1041,9 +1043,9 @@ async function loadPosts() {
                             </div>
                             <div style="display:flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                                 ${wpLinkHtml}
-                                <button class="btn btn-outline btn-sm" onclick="copyPostAndOpenGmb(${idx})" style="padding: 4px 8px; font-size: 0.75rem; color: #4285F4; border-color: rgba(66,133,244,0.4);" title="Copy text & Post update to Google Business Profile">
+                                <a href="https://www.google.com/search?q=Codespark+Software+Development+Melapalayam" target="_blank" onclick="copyPostToClipboard(event, ${idx})" class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 0.75rem; color: #4285F4; border-color: rgba(66,133,244,0.4); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;" title="Copy text & Open Google Business Profile to Add update">
                                     <i class="fab fa-google"></i> Google Update ↗
-                                </button>
+                                </a>
                                 <a href="${fbUrl}" target="_blank" class="btn btn-outline btn-sm" style="padding: 4px 8px; font-size: 0.75rem; color: #1877F2; border-color: rgba(24,119,242,0.3);" title="Share to Facebook">
                                     <i class="fab fa-facebook-f"></i> Share
                                 </a>
@@ -1126,18 +1128,25 @@ async function deletePostEntry(index) {
     }
 }
 
-function copyPostAndOpenGmb(idx) {
+function copyPostToClipboard(e, idx) {
     const post = (AppState.posts || [])[idx];
-    if (!post) return;
+    if (!post) {
+        showToast('Post content not found', 'warning');
+        return;
+    }
     const textToCopy = (post.title ? post.title + "\n\n" : '') + (post.content || '');
-    navigator.clipboard.writeText(textToCopy).then(() => {
-        showToast('Post text copied to clipboard! Opening Google Search for Codespark...', 'success');
-        setTimeout(() => {
-            window.open('https://www.google.com/search?q=Codespark+Software+Development+Melapalayam', '_blank');
-        }, 400);
-    }).catch(() => {
-        window.open('https://www.google.com/search?q=Codespark+Software+Development+Melapalayam', '_blank');
-    });
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy);
+    } else {
+        const ta = document.createElement('textarea');
+        ta.value = textToCopy;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+    }
+    showToast('Post text copied! Click "+ Add update" on Google and paste.', 'success');
 }
 
 async function generateAiPostBody() {
