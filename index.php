@@ -1388,60 +1388,105 @@ At Codespark Software Development, we build high-performance mobile apps, digita
 </div>
 
 <!-- GOOGLE BUSINESS PROFILE POST LAUNCHER MODAL -->
-<div id="gmbPublishAssistantModal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; padding: 20px;">
-    <div style="background: var(--bg-card); border: 1px solid var(--border-active); border-radius: var(--radius-md); max-width: 580px; width: 100%; padding: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
-            <h3 style="margin:0; font-size: 1.15rem; display:flex; align-items:center; gap:8px;">
-                <i class="fab fa-google" style="color: #4285F4;"></i> Publish to Google Business Profile
-            </h3>
-            <button onclick="closeGmbPublishAssistant()" style="background:transparent; border:none; color: var(--text-dim); font-size: 1.2rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+<div id="gmbPublishAssistantModal" style="display:none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 99999; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: #0f172a; border: 1px solid rgba(66, 133, 244, 0.35); border-radius: 16px; max-width: 580px; width: 100%; box-sizing: border-box; padding: 24px; box-shadow: 0 25px 60px -15px rgba(0,0,0,0.9), 0 0 35px rgba(66, 133, 244, 0.15); display: flex; flex-direction: column; gap: 14px; max-height: 92vh; overflow-y: auto;">
+        
+        <!-- Modal Header -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="display:flex; align-items:center; gap: 12px;">
+                <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(66, 133, 244, 0.12); border: 1px solid rgba(66, 133, 244, 0.3); display:flex; align-items:center; justify-content:center; flex-shrink: 0;">
+                    <i class="fab fa-google" style="color: #4285F4; font-size: 1.25rem;"></i>
+                </div>
+                <div>
+                    <h3 style="margin:0; font-size: 1.15rem; font-weight: 700; color: #F8FAFC; letter-spacing: -0.01em;">
+                        Publish to Google Business Profile
+                    </h3>
+                    <div style="font-size: 0.78rem; color: #94A3B8; margin-top: 2px;">
+                        Live Post Assistant & 1-Click Clipboard Launcher
+                    </div>
+                </div>
+            </div>
+            <button type="button" onclick="closeGmbPublishAssistant()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); width: 32px; height: 32px; border-radius: 8px; font-size: 1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: all 0.2s;" onmouseover="this.style.color='#fff'; this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.color='var(--text-muted)'; this.style.background='rgba(255,255,255,0.06)'">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
 
-        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-check-circle" style="color: #10B981; font-size: 1.2rem;"></i>
-            <div style="font-size: 0.85rem; color: #E2E8F0;">
-                <strong>Post content & button link are ready and copied to your clipboard!</strong>
+        <!-- Success Toast / Status Banner -->
+        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.08)); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-check-circle" style="color: #10B981; font-size: 1.15rem; flex-shrink: 0;"></i>
+            <div style="font-size: 0.83rem; color: #E2E8F0; line-height: 1.35;">
+                <strong style="color: #34D399;">Post text copied to clipboard!</strong> Ready to paste into Google.
             </div>
         </div>
 
-        <div class="form-group" style="margin-bottom: 12px;">
-            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; display:flex; justify-content:space-between;">
-                <span>Post Text (Ready to Paste)</span>
-                <button type="button" class="btn btn-outline btn-sm" onclick="copyGmbAssistantText()" style="padding: 2px 8px; font-size: 0.7rem; color: #34d399; border-color: rgba(52,211,153,0.3);">
-                    <i class="fas fa-copy"></i> Copy Again
-                </button>
-            </label>
-            <textarea class="form-control" id="gmbAssistantText" rows="4" style="font-size: 0.82rem; line-height: 1.4;"></textarea>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
-                <div style="font-size: 0.72rem; color: var(--text-dim);">Button CTA:</div>
-                <div id="gmbAssistantCtaType" style="font-size: 0.82rem; font-weight: 600; color: #93c5fd;">Learn more</div>
-                <button type="button" class="btn btn-outline btn-sm" onclick="copyGmbAssistantUrl()" style="margin-top: 4px; padding: 1px 6px; font-size: 0.68rem; color: #60a5fa;">
-                    <i class="fas fa-copy"></i> Copy URL
+        <!-- Post Textarea Area -->
+        <div style="display:flex; flex-direction:column; gap: 6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <label style="font-size: 0.78rem; font-weight: 600; color: #CBD5E1; margin: 0;">
+                    Post Text <span style="color: #64748B; font-weight: normal;">(Ready to Paste)</span>
+                </label>
+                <button type="button" class="btn btn-outline btn-sm" onclick="copyGmbAssistantText()" style="padding: 2px 10px; font-size: 0.72rem; color: #34D399; border-color: rgba(52,211,153,0.35); display:inline-flex; align-items:center; gap: 5px;">
+                    <i class="fas fa-copy"></i> Copy Text
                 </button>
             </div>
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
-                <div style="font-size: 0.72rem; color: var(--text-dim);">Image Link:</div>
-                <div id="gmbAssistantImageText" style="font-size: 0.78rem; color: var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">image.jpg</div>
-                <button type="button" class="btn btn-outline btn-sm" onclick="copyGmbAssistantImage()" style="margin-top: 4px; padding: 1px 6px; font-size: 0.68rem; color: #60a5fa;">
-                    <i class="fas fa-copy"></i> Copy Image URL
-                </button>
+            <textarea class="form-control" id="gmbAssistantText" rows="4" style="font-size: 0.82rem; line-height: 1.45; background: #0b1120; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #F1F5F9; padding: 10px 12px; resize: vertical; box-sizing: border-box; width: 100%;"></textarea>
+        </div>
+
+        <!-- 2-Column Responsive Card: Button CTA & Image -->
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; width: 100%; box-sizing: border-box;">
+            <!-- Column 1: CTA Button & Link -->
+            <div style="min-width: 0; background: #131d33; border: 1px solid rgba(66, 133, 244, 0.2); border-radius: 10px; padding: 10px 12px; display:flex; flex-direction:column; justify-content:space-between; gap: 6px; box-sizing: border-box;">
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                        <span style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B;">Action Button</span>
+                        <span id="gmbAssistantCtaBadge" class="status-pill info" style="font-size: 0.68rem; padding: 1px 6px;">LEARN_MORE</span>
+                    </div>
+                    <div id="gmbAssistantCtaUrl" style="font-size: 0.76rem; color: #93C5FD; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;" title="CTA URL">
+                        https://codespark.online/contact/
+                    </div>
+                    <div id="gmbAssistantCtaType" style="display:none;"></div>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="copyGmbAssistantUrl()" style="padding: 3px 8px; font-size: 0.7rem; color: #60A5FA; border-color: rgba(96, 165, 250, 0.35); display:inline-flex; align-items:center; gap: 5px; width: 100%; justify-content:center;">
+                        <i class="fas fa-link"></i> Copy Button URL
+                    </button>
+                </div>
+            </div>
+
+            <!-- Column 2: Image Preview & URL -->
+            <div style="min-width: 0; background: #131d33; border: 1px solid rgba(66, 133, 244, 0.2); border-radius: 10px; padding: 10px 12px; display:flex; flex-direction:column; justify-content:space-between; gap: 6px; box-sizing: border-box;">
+                <div style="display:flex; align-items:center; gap: 8px; min-width: 0;">
+                    <img id="gmbAssistantImgThumb" src="" alt="Thumbnail" style="width: 36px; height: 36px; border-radius: 6px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; display: none;">
+                    <div style="min-width: 0; flex: 1;">
+                        <span style="font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B; display:block; margin-bottom: 2px;">Image URL</span>
+                        <div id="gmbAssistantImageText" style="font-size: 0.76rem; color: #94A3B8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;" title="Image Link">
+                            image.jpg
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="copyGmbAssistantImage()" style="padding: 3px 8px; font-size: 0.7rem; color: #38BDF8; border-color: rgba(56, 189, 248, 0.35); display:inline-flex; align-items:center; gap: 5px; width: 100%; justify-content:center;">
+                        <i class="fas fa-image"></i> Copy Image URL
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div style="display:flex; flex-direction: column; gap: 10px;">
-            <a id="btnGmbAssistantOpenGoogle" href="https://business.google.com/" target="_blank" class="btn btn-primary" style="justify-content:center; text-decoration:none; background: linear-gradient(135deg, #4285F4, #1a73e8); font-size: 0.92rem; font-weight: 600; padding: 12px;">
+        <!-- Launch Button -->
+        <div style="display:flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+            <a id="btnGmbAssistantOpenGoogle" href="https://business.google.com/" target="_blank" class="btn btn-primary" style="justify-content:center; text-decoration:none; background: linear-gradient(135deg, #2563eb, #1d4ed8); border: 1px solid rgba(255,255,255,0.15); font-size: 0.92rem; font-weight: 600; padding: 12px; border-radius: 10px; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4); display:flex; align-items:center; gap: 8px;">
                 <i class="fab fa-google"></i> 1. Open Google Business Profile (+ Add post) ↗
             </a>
-            <p style="margin: 0; font-size: 0.75rem; color: var(--text-dim); text-align: center;">
-                Click above to open Google's post screen, click <strong>"+ Add post"</strong>, and press <kbd>Ctrl+V</kbd> / <kbd>Cmd+V</kbd> to paste!
+            <p style="margin: 0; font-size: 0.75rem; color: #94A3B8; text-align: center; line-height: 1.4;">
+                Click above to open Google's post screen, click <strong style="color:#E2E8F0;">"+ Add update"</strong>, then press <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 1px 5px; font-size: 0.7rem; color: #fff;">Ctrl+V</kbd> / <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 1px 5px; font-size: 0.7rem; color: #fff;">Cmd+V</kbd> to paste!
             </p>
         </div>
 
-        <div style="display:flex; justify-content:flex-end; margin-top: 16px;">
-            <button class="btn btn-outline btn-sm" onclick="closeGmbPublishAssistant()">Done</button>
+        <!-- Footer -->
+        <div style="display:flex; justify-content:flex-end; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <button class="btn btn-outline btn-sm" onclick="closeGmbPublishAssistant()" style="padding: 6px 16px; font-size: 0.82rem; border-color: rgba(255,255,255,0.15); color: #CBD5E1;">
+                Done
+            </button>
         </div>
     </div>
 </div>

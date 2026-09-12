@@ -1436,11 +1436,33 @@ function openGmbPublishAssistant(post) {
         navigator.clipboard.writeText(textToCopy);
     }
 
+    const ctaBadge = document.getElementById('gmbAssistantCtaBadge');
+    if (ctaBadge) ctaBadge.textContent = post.cta_type || 'LEARN_MORE';
+
+    const ctaUrl = document.getElementById('gmbAssistantCtaUrl');
+    if (ctaUrl) {
+        ctaUrl.textContent = post.cta_url || 'No URL specified';
+        ctaUrl.title = post.cta_url || '';
+    }
+
     const ctaEl = document.getElementById('gmbAssistantCtaType');
     if (ctaEl) ctaEl.textContent = `${post.cta_type || 'Learn more'}: ${post.cta_url || ''}`;
 
+    const imgThumb = document.getElementById('gmbAssistantImgThumb');
+    if (imgThumb) {
+        if (post.image_url) {
+            imgThumb.src = post.image_url;
+            imgThumb.style.display = 'block';
+        } else {
+            imgThumb.style.display = 'none';
+        }
+    }
+
     const imgEl = document.getElementById('gmbAssistantImageText');
-    if (imgEl) imgEl.textContent = post.image_url || 'No image';
+    if (imgEl) {
+        imgEl.textContent = post.image_url || 'No image attached';
+        imgEl.title = post.image_url || '';
+    }
 
     window._lastGmbPost = post;
 
