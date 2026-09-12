@@ -599,13 +599,15 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                         <p>Create, optimize, and publish SEO blog posts directly to codespark.online.</p>
                     </div>
                 </div>
-                <div style="background: rgba(99, 102, 241, 0.08); border: 1px dashed var(--primary); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 18px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
+                <div class="ai-autonomous-card">
                     <div>
-                        <strong style="color: #fff; font-size: 0.92rem;"><i class="fas fa-robot" style="color: var(--primary);"></i> AI Autonomous Publisher to codespark.online</strong>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0 0 0;">Automatically creates an SEO article targeted for your Tirunelveli keywords and publishes live to your website.</p>
+                        <strong style="color: #F8FAFC; font-size: 0.94rem; display:flex; align-items:center; gap: 8px;">
+                            <i class="fas fa-robot" style="color: #60A5FA;"></i> AI Autonomous Publisher to codespark.online
+                        </strong>
+                        <p style="font-size: 0.82rem; color: var(--text-muted); margin: 3px 0 0 0; line-height: 1.45;">Automatically creates an SEO article targeted for your Tirunelveli keywords and publishes live to your website.</p>
                     </div>
                     <div>
-                        <button class="btn btn-primary btn-sm" id="btnAutoPublishTabSocial" onclick="triggerAutoCreatePost()">
+                        <button class="btn btn-primary btn-sm" id="btnAutoPublishTabSocial" onclick="triggerAutoCreatePost()" style="box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);">
                             <i class="fas fa-magic"></i> Auto-Generate & Publish Post
                         </button>
                     </div>
@@ -619,7 +621,7 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                 <div class="form-group">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <label class="form-label" style="margin-bottom:0;">Post Body (Include local hashtags & geo intent)</label>
-                        <button type="button" class="btn btn-outline btn-sm" id="btnGenBodyAi" onclick="generateAiPostBody()" style="padding: 3px 10px; font-size: 0.78rem; color: #818cf8; border-color: rgba(99, 102, 241, 0.4);">
+                        <button type="button" class="btn btn-outline btn-sm" id="btnGenBodyAi" onclick="generateAiPostBody()" style="padding: 3px 12px; font-size: 0.78rem; color: #60A5FA; border-color: rgba(96, 165, 250, 0.35);">
                             <i class="fas fa-magic"></i> Auto-Generate Body with AI
                         </button>
                     </div>
@@ -627,13 +629,13 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                 </div>
 
                 <!-- Dedicated SEO Meta Tags Box (Gemini AI Powered) -->
-                <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 18px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <div class="seo-meta-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
                         <div>
-                            <strong style="color: #34d399; font-size: 0.92rem;"><i class="fas fa-search"></i> SEO Meta Tags (Rank Math, Google Snippet & Schema)</strong>
-                            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 2px 0 0 0;">These tags are embedded into WordPress SEO fields and rich JSON-LD schema for high Google rankings.</p>
+                            <strong style="color: #34D399; font-size: 0.94rem; display:flex; align-items:center; gap: 8px;"><i class="fas fa-search"></i> SEO Meta Tags (Rank Math, Google Snippet & Schema)</strong>
+                            <p style="font-size: 0.8rem; color: var(--text-muted); margin: 3px 0 0 0;">These tags are embedded into WordPress SEO fields and rich JSON-LD schema for high Google rankings.</p>
                         </div>
-                        <button type="button" class="btn btn-outline btn-sm" id="btnGenMetaAi" onclick="generateAiSeoMeta()" style="border-color: rgba(52, 211, 153, 0.4); color: #34d399;">
+                        <button type="button" class="btn btn-outline btn-sm" id="btnGenMetaAi" onclick="generateAiSeoMeta()" style="border-color: rgba(52, 211, 153, 0.35); color: #34D399;">
                             <i class="fas fa-magic"></i> Generate SEO Meta with Gemini
                         </button>
                     </div>
