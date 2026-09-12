@@ -130,7 +130,7 @@ switch ($action) {
         break;
 
     case 'save_profile':
-        $fields = ['name', 'category', 'address', 'city', 'state', 'zip', 'phone', 'website', 'latitude', 'longitude', 'google_profile_id', 'target_keywords'];
+        $fields = ['name', 'category', 'address', 'city', 'state', 'zip', 'phone', 'website', 'latitude', 'longitude', 'google_place_id', 'google_profile_id', 'target_keywords'];
         foreach ($fields as $f) {
             if (isset($params[$f])) {
                 $config['business'][$f] = $params[$f];

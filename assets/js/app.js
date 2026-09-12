@@ -318,7 +318,7 @@ async function loadReviews() {
         }).join('');
 
         // Review Collection Link & QR Code
-        const placeId = AppState.profile ? AppState.profile.google_place_id : 'ChIJL6WbVd_9DDkR7L94XpW7B';
+        const placeId = (AppState.profile && AppState.profile.google_place_id) ? AppState.profile.google_place_id : 'ChIJnXaQs6cTBDsRqOlGcHkecRw';
         const reviewUrl = `https://search.google.com/local/writereview?placeid=${placeId}`;
         const linkInput = document.getElementById('reviewLinkInput');
         if (linkInput) linkInput.value = reviewUrl;
@@ -327,9 +327,63 @@ async function loadReviews() {
         if (qrImg) {
             qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(reviewUrl)}`;
         }
+
+        const waBtn = document.getElementById('whatsappShareBtn');
+        if (waBtn) {
+            const waMsg = encodeURIComponent(`Hi! Could you please take 15 seconds to leave Codespark Software Development a 5-star Google review? It helps us immensely: ${reviewUrl}`);
+            waBtn.href = `https://api.whatsapp.com/send?text=${waMsg}`;
+        }
     } catch (e) {
         console.error('Error loading reviews:', e);
     }
+}
+
+function printCounterStandee() {
+    const link = document.getElementById('reviewLinkInput')?.value || 'https://search.google.com/local/writereview?placeid=ChIJnXaQs6cTBDsRqOlGcHkecRw';
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(link)}`;
+    const bizName = AppState.profile?.name || 'Codespark Software Development';
+    const city = AppState.profile?.city || 'Tirunelveli';
+
+    const printWin = window.open('', '_blank', 'width=700,height=850');
+    if (!printWin) {
+        window.open(qrUrl, '_blank');
+        return;
+    }
+    printWin.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Google Review Standee - ${bizName}</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; text-align: center; padding: 40px; color: #1e293b; background: #fff; }
+                .standee-card { border: 4px solid #4285F4; border-radius: 24px; padding: 40px 30px; max-width: 480px; margin: 0 auto; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+                .stars { color: #fbbc05; font-size: 32px; margin: 12px 0; letter-spacing: 4px; }
+                h1 { font-size: 26px; margin: 0 0 8px 0; color: #0f172a; }
+                h2 { font-size: 17px; font-weight: 500; color: #475569; margin: 0 0 24px 0; }
+                .qr-box { background: #f8fafc; padding: 20px; border-radius: 16px; display: inline-block; border: 2px dashed #cbd5e1; margin-bottom: 24px; }
+                .cta { font-size: 16px; font-weight: 700; color: #4285F4; text-transform: uppercase; letter-spacing: 1px; }
+                .footer { font-size: 13px; color: #94a3b8; margin-top: 20px; }
+                @media print { body { padding: 0; } .standee-card { box-shadow: none; border-width: 3px; } }
+            </style>
+        </head>
+        <body>
+            <div class="standee-card">
+                <div class="stars">★★★★★</div>
+                <h1>Love Our Work?</h1>
+                <h2>Review <strong>${bizName}</strong> on Google!</h2>
+                <div class="qr-box">
+                    <img src="${qrUrl}" alt="Scan to Review" width="240" height="240">
+                </div>
+                <div class="cta">Scan with your phone camera</div>
+                <div class="footer">Housing Board Colony, Melapalayam, ${city} • Phone: +91 81108 99000</div>
+            </div>
+            <script>
+                window.onload = function() { window.print(); }
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWin.document.close();
 }
 
 async function openReplyModal(reviewId, author, comment, existingReply) {

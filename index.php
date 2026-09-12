@@ -348,7 +348,7 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                             <a class="btn btn-success btn-sm" id="whatsappShareBtn" target="_blank" href="https://api.whatsapp.com/send?text=Hi!%20Could%20you%20take%2015%20seconds%20to%20leave%20us%20a%20Google%20review?">
                                 <i class="fab fa-whatsapp"></i> Share on WhatsApp
                             </a>
-                            <button class="btn btn-outline btn-sm" onclick="showToast('Print QR poster template ready!');">
+                            <button class="btn btn-outline btn-sm" onclick="printCounterStandee()">
                                 <i class="fas fa-print"></i> Print Counter Standee
                             </button>
                         </div>
