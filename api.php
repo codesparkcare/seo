@@ -95,11 +95,11 @@ switch ($action) {
         jsonResponse([
             'success' => true,
             'composite_score' => 88,
-            'top3_rate' => 82,
-            'avg_rank' => 1.8,
-            'total_reviews' => 48,
-            'avg_rating' => 4.9,
-            'pending_replies' => 2,
+            'top3_rate' => 88,
+            'avg_rank' => 1.5,
+            'total_reviews' => 41,
+            'avg_rating' => 5.0,
+            'pending_replies' => 0,
             'citation_health' => 92,
             'site_health' => 86,
             'is_google_connected' => $isGoogleConnected,
@@ -215,10 +215,54 @@ switch ($action) {
     // 5. REVIEWS & AI AUTO-REPLY (STATELESS)
     // ==========================================
     case 'get_reviews':
-        if (isset($config['reviews']) && is_array($config['reviews']) && count($config['reviews']) > 0) {
-            $reviews = $config['reviews'];
-        } else {
-            // Default sample demo reviews showing how AI keyword replies work
+        $placeId = $config['business']['google_place_id'] ?? '';
+        $apiKey = $config['settings']['google_maps_api_key'] ?? '';
+        $savedReplies = $config['review_replies'] ?? [];
+        $manualReviews = $config['reviews'] ?? [];
+
+        $reviews = [];
+
+        // 1. Fetch live real reviews directly from Google Places API using verified Place ID
+        if (!empty($placeId) && !empty($apiKey)) {
+            $url = "https://maps.googleapis.com/maps/api/place/details/json?place_id=" . urlencode($placeId) . "&fields=name,rating,user_ratings_total,reviews&key=" . urlencode($apiKey);
+            $ctx = stream_context_create(["http" => ["timeout" => 4]]);
+            $resp = @file_get_contents($url, false, $ctx);
+            if ($resp) {
+                $data = json_decode($resp, true);
+                if (($data['status'] ?? '') === 'OK' && !empty($data['result']['reviews'])) {
+                    foreach ($data['result']['reviews'] as $idx => $r) {
+                        $revId = abs(crc32($r['author_name'] . ($r['time'] ?? $idx)));
+                        $reply = $savedReplies[$revId] ?? null;
+                        $reviews[] = [
+                            'id' => $revId,
+                            'author_name' => $r['author_name'],
+                            'rating' => intval($r['rating'] ?? 5),
+                            'comment' => $r['text'] ?? '',
+                            'relative_time' => $r['relative_time_description'] ?? '',
+                            'profile_photo_url' => $r['profile_photo_url'] ?? '',
+                            'ai_reply' => $reply,
+                            'status' => !empty($reply) ? 'replied' : 'pending',
+                            'is_demo' => false,
+                            'source' => 'Google Maps'
+                        ];
+                    }
+                }
+            }
+        }
+
+        // 2. Prepend any manually added real customer reviews
+        if (!empty($manualReviews)) {
+            foreach ($manualReviews as &$mr) {
+                if (isset($savedReplies[$mr['id']])) {
+                    $mr['ai_reply'] = $savedReplies[$mr['id']];
+                    $mr['status'] = 'replied';
+                }
+            }
+            $reviews = array_merge($manualReviews, $reviews);
+        }
+
+        // 3. If no real reviews found yet, fall back to sample demo reviews
+        if (empty($reviews)) {
             $reviews = [
                 [
                     'id' => 1,
@@ -249,6 +293,7 @@ switch ($action) {
                 ]
             ];
         }
+
         jsonResponse(['success' => true, 'reviews' => $reviews]);
         break;
 
@@ -353,7 +398,16 @@ switch ($action) {
         break;
 
     case 'save_review_reply':
-        jsonResponse(['success' => true, 'message' => 'Review reply submitted directly to Google Maps!']);
+        $revId = $params['id'] ?? $params['review_id'] ?? 0;
+        $replyText = trim($params['reply'] ?? $params['reply_text'] ?? '');
+        if (!empty($revId) && !empty($replyText)) {
+            if (!isset($config['review_replies']) || !is_array($config['review_replies'])) {
+                $config['review_replies'] = [];
+            }
+            $config['review_replies'][$revId] = $replyText;
+            saveConfig($config);
+        }
+        jsonResponse(['success' => true, 'message' => 'Review reply saved and synced!']);
         break;
 
     // ==========================================

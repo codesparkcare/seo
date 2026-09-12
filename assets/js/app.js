@@ -286,15 +286,26 @@ async function loadReviews() {
             const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
             const isReplied = r.status === 'replied';
             const isDemo = !!r.is_demo;
+            const isGoogle = r.source === 'Google Maps';
+            const avatar = r.profile_photo_url ? `<img src="${escapeHtml(r.profile_photo_url)}" style="width:28px; height:28px; border-radius:50%; object-fit:cover;" alt="">` : `<div style="width:28px; height:28px; border-radius:50%; background:rgba(66,133,244,0.2); color:#4285F4; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold;">${escapeHtml(r.author_name.charAt(0))}</div>`;
+
             return `
                 <tr>
                     <td>
-                        <strong>${escapeHtml(r.author_name)}</strong>
-                        ${isDemo ? `<span style="display:inline-block; font-size:0.68rem; background:rgba(255,255,255,0.08); color:var(--text-dim); padding:1px 6px; border-radius:3px; margin-left:6px;">Sample Demo</span>` : `<span style="display:inline-block; font-size:0.68rem; background:rgba(16,185,129,0.15); color:#34d399; padding:1px 6px; border-radius:3px; margin-left:6px;"><i class="fas fa-check-circle"></i> Real Client</span>`}
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            ${avatar}
+                            <div>
+                                <div style="font-weight:600; font-size:0.9rem;">${escapeHtml(r.author_name)}</div>
+                                <div style="font-size:0.72rem; color:var(--text-dim); display:flex; align-items:center; gap:6px; margin-top:2px;">
+                                    ${r.relative_time ? `<span>${escapeHtml(r.relative_time)}</span> • ` : ''}
+                                    ${isGoogle ? `<span style="color:#4285F4;"><i class="fab fa-google"></i> Google Maps</span>` : (isDemo ? `<span style="background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:3px;">Sample Demo</span>` : `<span style="color:#10b981;"><i class="fas fa-check-circle"></i> Direct Client</span>`)}
+                                </div>
+                            </div>
+                        </div>
                     </td>
                     <td style="color: #F59E0B; font-size: 1rem; letter-spacing: 2px;">${stars}</td>
-                    <td style="max-width: 320px;">
-                        <div style="font-size: 0.85rem;">${escapeHtml(r.comment || '')}</div>
+                    <td style="max-width: 340px;">
+                        <div style="font-size: 0.85rem; line-height: 1.4;">${escapeHtml(r.comment || '')}</div>
                         ${isReplied ? `
                             <div style="margin-top: 6px; background: rgba(16,185,129,0.08); border-left: 3px solid var(--success); padding: 6px 10px; border-radius: 4px; font-size: 0.78rem; color: #A7F3D0;">
                                 <i class="fas fa-robot"></i> <strong>AI Local SEO Reply:</strong> ${escapeHtml(r.ai_reply)}
@@ -317,7 +328,7 @@ async function loadReviews() {
                                     <i class="fas fa-magic"></i> Auto-Generate Reply
                                 </button>
                             `}
-                            ${!isDemo ? `
+                            ${(!isDemo && !isGoogle) ? `
                                 <button class="btn btn-outline btn-sm" onclick="deleteCustomerReview(${r.id})" style="padding:4px 8px; color:#ef4444; border-color:rgba(239,68,68,0.3);" title="Remove review">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
