@@ -295,7 +295,32 @@ function renderRichPostContent($title, $content, $kw, $primaryImg = '', $seconda
     
     // 3. Main Content paragraphs
     $html .= "<div class='wp-post-body-content' style='font-size: 1.05rem; line-height: 1.8; color: #334155;'>\n";
-    $html .= "<p>" . nl2br(htmlspecialchars($content)) . "</p>\n\n";
+    
+    // Decode any pre-escaped entities and strip markdown code fences if present
+    $cleanRaw = preg_replace('/^```(?:html)?\s*/i', '', trim($content));
+    $cleanRaw = preg_replace('/```$/i', '', trim($cleanRaw));
+    $decoded = html_entity_decode($cleanRaw, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    
+    // Check if content has HTML tags (e.g. <h2>, <p>, <strong>, <ul>, <li>)
+    $hasHtml = (preg_match('/<\s*(?:p|h[1-6]|ul|ol|li|div|blockquote|strong|b|em|table|section|article|br)\b/i', $decoded) > 0);
+    if ($hasHtml) {
+        // Strip unsafe script/iframe tags while allowing all rich semantic formatting tags
+        $cleanContent = strip_tags($decoded, '<p><br><h2><h3><h4><h5><h6><ul><ol><li><strong><b><em><i><a><blockquote><span><div><hr><table><tr><td><th><tbody><thead>');
+        // Convert any stray h1 in body to h2 so the article has only one primary H1
+        $cleanContent = preg_replace('/<h1\b[^>]*>(.*?)<\/h1>/i', '<h2 style="font-size: 1.55rem; font-weight: 700; color: #1e293b; margin: 24px 0 12px 0;">$1</h2>', $cleanContent);
+        $html .= $cleanContent . "\n\n";
+    } else {
+        // Plain text: split into clean paragraphs
+        $paragraphs = array_filter(array_map('trim', explode("\n\n", $cleanRaw)));
+        if (!empty($paragraphs)) {
+            foreach ($paragraphs as $p) {
+                $html .= "<p style='margin-bottom: 16px;'>" . nl2br(htmlspecialchars($p)) . "</p>\n";
+            }
+            $html .= "\n";
+        } else {
+            $html .= "<p style='margin-bottom: 16px;'>" . nl2br(htmlspecialchars($cleanRaw)) . "</p>\n\n";
+        }
+    }
     
     // 4. Secondary In-Content Image with rich SEO Alt and caption (Image 4 format)
     if (!empty($secondaryImg)) {
