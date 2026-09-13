@@ -1742,6 +1742,153 @@ async function generateAiPostBody() {
             btn.disabled = false;
             btn.innerHTML = origHtml;
         }
+// -------------------------------------------------------------
+// WordPress Taxonomies, Landing Pages & Multi-Image Studio State
+// -------------------------------------------------------------
+let wpAllCategories = [];
+let wpAllTags = [];
+let wpSelectedCategoryIds = [];
+let wpSelectedTagIds = [];
+
+async function syncWpTaxonomies(force = false) {
+    const catBox = document.getElementById('wpSelectedCategoriesContainer');
+    const tagBox = document.getElementById('wpSelectedTagsContainer');
+    const catSelect = document.getElementById('wpCategorySelector');
+    const tagSelect = document.getElementById('wpTagSelector');
+
+    try {
+        const res = await fetch(`api.php?action=get_wp_taxonomies${force ? '&force=1' : ''}`);
+        const data = await res.json();
+        if (data.success) {
+            wpAllCategories = data.categories || [];
+            wpAllTags = data.tags || [];
+
+            // Populate Category Select Dropdown
+            if (catSelect) {
+                catSelect.innerHTML = '<option value="">-- Choose Category to Add/Remove --</option>' +
+                    wpAllCategories.map(c => `<option value="${c.id}">${c.name} (${c.count} posts)</option>`).join('');
+            }
+
+            // Populate Tag Select Dropdown
+            if (tagSelect) {
+                tagSelect.innerHTML = '<option value="">-- Choose Tag to Add/Remove --</option>' +
+                    wpAllTags.map(t => `<option value="${t.id}">${t.name} (${t.count} posts)</option>`).join('');
+            }
+
+            // If no categories selected yet, pick top 2 defaults
+            if (wpSelectedCategoryIds.length === 0 && wpAllCategories.length > 0) {
+                const defaultCats = wpAllCategories.filter(c => {
+                    const n = c.name.toLowerCase();
+                    return n.includes('it company') || n.includes('software') || n.includes('solutions') || n.includes('seo');
+                }).slice(0, 2);
+                wpSelectedCategoryIds = defaultCats.map(c => c.id);
+            }
+
+            renderSelectedCategories();
+            renderSelectedTags();
+
+            if (force) showToast('Synced categories and tags live with codespark.online!', 'success');
+        }
+    } catch (e) {
+        console.error('Taxonomy sync error', e);
+    }
+}
+
+function renderSelectedCategories() {
+    const container = document.getElementById('wpSelectedCategoriesContainer');
+    if (!container) return;
+
+    if (wpSelectedCategoryIds.length === 0) {
+        container.innerHTML = '<span style="font-size: 0.75rem; color: #64748B;">No categories selected. Pick from dropdown below.</span>';
+        return;
+    }
+
+    container.innerHTML = wpSelectedCategoryIds.map(id => {
+        const cat = wpAllCategories.find(c => c.id === id) || { id, name: `Category #${id}` };
+        return `<span style="display:inline-flex; align-items:center; gap:6px; background: rgba(59, 130, 246, 0.18); border: 1px solid rgba(59, 130, 246, 0.4); color: #93C5FD; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; font-weight: 500;">
+            ${cat.name}
+            <button type="button" onclick="removeCategory(${id})" style="background:none; border:none; color:#93C5FD; cursor:pointer; font-size:0.75rem; padding:0; margin-left:2px;">&times;</button>
+        </span>`;
+    }).join('');
+}
+
+function renderSelectedTags() {
+    const container = document.getElementById('wpSelectedTagsContainer');
+    if (!container) return;
+
+    if (wpSelectedTagIds.length === 0) {
+        container.innerHTML = '<span style="font-size: 0.75rem; color: #64748B;">No tags selected. Pick from dropdown below.</span>';
+        return;
+    }
+
+    container.innerHTML = wpSelectedTagIds.map(id => {
+        const tag = wpAllTags.find(t => t.id === id) || { id, name: `Tag #${id}` };
+        return `<span style="display:inline-flex; align-items:center; gap:6px; background: rgba(16, 185, 129, 0.18); border: 1px solid rgba(16, 185, 129, 0.4); color: #6EE7B7; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px; font-weight: 500;">
+            ${tag.name}
+            <button type="button" onclick="removeTag(${id})" style="background:none; border:none; color:#6EE7B7; cursor:pointer; font-size:0.75rem; padding:0; margin-left:2px;">&times;</button>
+        </span>`;
+    }).join('');
+}
+
+function toggleCategoryFromSelect(val) {
+    if (!val) return;
+    const catId = parseInt(val, 10);
+    if (!wpSelectedCategoryIds.includes(catId)) {
+        wpSelectedCategoryIds.push(catId);
+    } else {
+        wpSelectedCategoryIds = wpSelectedCategoryIds.filter(id => id !== catId);
+    }
+    renderSelectedCategories();
+    document.getElementById('wpCategorySelector').value = '';
+}
+
+function removeCategory(catId) {
+    wpSelectedCategoryIds = wpSelectedCategoryIds.filter(id => id !== catId);
+    renderSelectedCategories();
+}
+
+function toggleTagFromSelect(val) {
+    if (!val) return;
+    const tagId = parseInt(val, 10);
+    if (!wpSelectedTagIds.includes(tagId)) {
+        wpSelectedTagIds.push(tagId);
+    } else {
+        wpSelectedTagIds = wpSelectedTagIds.filter(id => id !== tagId);
+    }
+    renderSelectedTags();
+    document.getElementById('wpTagSelector').value = '';
+}
+
+function removeTag(tagId) {
+    wpSelectedTagIds = wpSelectedTagIds.filter(id => id !== tagId);
+    renderSelectedTags();
+}
+
+function onLandingPageSelectChange(url) {
+    if (!url) return;
+    const ctaInput = document.getElementById('postCtaUrlInput');
+    if (ctaInput) ctaInput.value = url;
+}
+
+function setWpSecondaryImage(url, alt) {
+    const input = document.getElementById('postSecondaryImageInput');
+    if (input) input.value = url;
+    updateWpSecondaryImagePreview(url);
+    const altInput = document.getElementById('postSecondaryImageAltInput');
+    if (altInput && alt) altInput.value = alt;
+}
+
+function updateWpSecondaryImagePreview(url) {
+    const img = document.getElementById('wpSecondaryImagePreview');
+    const placeholder = document.getElementById('wpSecondaryPlaceholder');
+    if (!img) return;
+    if (url && url.trim()) {
+        img.src = url.trim();
+        img.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+    } else {
+        img.style.display = 'none';
+        if (placeholder) placeholder.style.display = 'flex';
     }
 }
 
@@ -1755,7 +1902,8 @@ function onWpKeywordChange(keyword) {
     if (metaKwEl) {
         metaKwEl.value = `${keyword}, Codespark Software Development, Tirunelveli IT Company, Best Software Services`;
     }
-    // Auto-match relevant featured image preset
+
+    // Auto-match Primary Featured Image
     const kw = keyword.toLowerCase();
     let img = 'https://images.unsplash.com/photo-1547658719-da2b51169166?w=1200&auto=format&fit=crop';
     if (kw.includes('app') || kw.includes('mobile')) {
@@ -1770,6 +1918,62 @@ function onWpKeywordChange(keyword) {
         img = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop';
     }
     setWpFeaturedImage(img, keyword);
+
+    // Auto-match Secondary In-Content Image & Alt Text (Image 4 Style)
+    let secImg = 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1000&auto=format&fit=crop';
+    let secAlt = `Professional ${keyword} in Tirunelveli | CodeSpark offers SEO, website development, and Android & iOS mobile app development services.`;
+    if (kw.includes('app') || kw.includes('mobile')) {
+        secImg = 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=1000&auto=format&fit=crop';
+        secAlt = 'Custom Mobile App Development in Tirunelveli | CodeSpark builds scalable iOS and Android applications.';
+    } else if (kw.includes('intern') || kw.includes('training') || kw.includes('python')) {
+        secImg = 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1000&auto=format&fit=crop';
+        secAlt = 'Professional Software Solutions & Internship in Tirunelveli | CodeSpark offers practical live project mentorship.';
+    } else if (kw.includes('billing') || kw.includes('pos')) {
+        secImg = 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=1000&auto=format&fit=crop';
+        secAlt = 'GST Billing & POS Software in Tirunelveli | Fast barcode scanning, accounting and stock management by Codespark.';
+    } else if (kw.includes('cloud') || kw.includes('hosting')) {
+        secImg = 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=1000&auto=format&fit=crop';
+        secAlt = 'Enterprise Cloud Hosting & Server Infrastructure in Tirunelveli | High speed 99.9% uptime by Codespark.';
+    } else if (kw.includes('seo') || kw.includes('marketing')) {
+        secImg = 'https://images.unsplash.com/photo-1557838923-2985c318be48?w=1000&auto=format&fit=crop';
+        secAlt = 'Top Ranking SEO & Digital Marketing in Tirunelveli | Dominate Google 1st Page with Codespark.';
+    }
+    setWpSecondaryImage(secImg, secAlt);
+
+    // Auto-map Landing Page / Form URL
+    let landingUrl = 'https://codespark.online/contact/';
+    if (kw.includes('web') || kw.includes('design') || kw.includes('site')) {
+        landingUrl = 'https://codespark.online/best-website-design-for-your-business/';
+    } else if (kw.includes('bill') || kw.includes('pos')) {
+        landingUrl = 'https://codespark.online/easy-billing-software/';
+    } else if (kw.includes('intern') || kw.includes('student') || kw.includes('python')) {
+        landingUrl = 'https://codespark.online/internship-for-students/';
+    } else if (kw.includes('seo') || kw.includes('market')) {
+        landingUrl = 'https://codespark.online/digital-marketing-for-your-business/';
+    } else if (kw.includes('cloud') || kw.includes('hosting')) {
+        landingUrl = 'https://codespark.online/cloud-hosting-provider/';
+    }
+    const landingSelect = document.getElementById('wpLandingPageSelect');
+    if (landingSelect) landingSelect.value = landingUrl;
+    const ctaUrlInput = document.getElementById('postCtaUrlInput');
+    if (ctaUrlInput) ctaUrlInput.value = landingUrl;
+
+    // Auto-match categories in local state
+    if (wpAllCategories.length > 0) {
+        const matched = wpAllCategories.filter(c => {
+            const cn = c.name.toLowerCase();
+            if (kw.includes('intern') && (cn.includes('intern') || cn.includes('training'))) return true;
+            if ((kw.includes('app') || kw.includes('mobile')) && (cn.includes('app') || cn.includes('android'))) return true;
+            if ((kw.includes('bill') || kw.includes('pos')) && cn.includes('bill')) return true;
+            if ((kw.includes('web') || kw.includes('design')) && (cn.includes('web') || cn.includes('dynamic') || cn.includes('customized'))) return true;
+            if ((kw.includes('seo') || kw.includes('market')) && (cn.includes('seo') || cn.includes('market'))) return true;
+            return false;
+        }).map(c => c.id);
+        if (matched.length > 0) {
+            wpSelectedCategoryIds = matched.slice(0, 4);
+            renderSelectedCategories();
+        }
+    }
 }
 
 function setWpFeaturedImage(url, label) {
@@ -1824,10 +2028,31 @@ async function generateFullWpPostFromKeyword() {
             if (data.meta_title && document.getElementById('postMetaTitleInput')) document.getElementById('postMetaTitleInput').value = data.meta_title;
             if (data.meta_description && document.getElementById('postMetaDescInput')) document.getElementById('postMetaDescInput').value = data.meta_description;
             if (data.meta_keywords && document.getElementById('postMetaKeywordsInput')) document.getElementById('postMetaKeywordsInput').value = data.meta_keywords;
+            
+            // Primary & Secondary Images
             if (data.image_url) setWpFeaturedImage(data.image_url, keyword);
+            if (data.secondary_image_url) setWpSecondaryImage(data.secondary_image_url, data.secondary_image_alt);
+            
+            // Target Landing Page URL
+            if (data.cta_url) {
+                const lpSelect = document.getElementById('wpLandingPageSelect');
+                if (lpSelect) lpSelect.value = data.cta_url;
+                const ctaInput = document.getElementById('postCtaUrlInput');
+                if (ctaInput) ctaInput.value = data.cta_url;
+            }
+
+            // Categories and Tags
+            if (data.suggested_categories && data.suggested_categories.length > 0) {
+                wpSelectedCategoryIds = data.suggested_categories;
+                renderSelectedCategories();
+            }
+            if (data.suggested_tags && data.suggested_tags.length > 0) {
+                wpSelectedTagIds = data.suggested_tags;
+                renderSelectedTags();
+            }
 
             updateMetaCounters();
-            showToast(`Generated full post for "${keyword}"! Review & click Publish below.`, 'success');
+            showToast(`Generated full post for "${keyword}"! 2+ authority links, secondary image & lead magnet added.`, 'success');
         } else {
             showToast(data.error || 'Failed to generate post content', 'error');
         }
@@ -1933,12 +2158,20 @@ async function submitSocialPost(publishNow = false) {
         btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${publishNow ? 'Publishing...' : 'Scheduling...'}`;
     }
 
+    const secondaryImageUrl = document.getElementById('postSecondaryImageInput')?.value?.trim() || '';
+    const secondaryImageAlt = document.getElementById('postSecondaryImageAltInput')?.value?.trim() || '';
+
     try {
         const res = await fetch('api.php?action=create_post', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                title, content, image_url: imageUrl, platforms, cta_type: ctaType, cta_url: ctaUrl,
+                title, content, image_url: imageUrl,
+                secondary_image_url: secondaryImageUrl,
+                secondary_image_alt: secondaryImageAlt,
+                categories: wpSelectedCategoryIds,
+                tags: wpSelectedTagIds,
+                platforms, cta_type: ctaType, cta_url: ctaUrl,
                 scheduled_for: scheduledFor || undefined, publish_now: publishNow,
                 meta_title: metaTitle, meta_description: metaDesc, meta_keywords: metaKeywords
             })
@@ -1951,8 +2184,6 @@ async function submitSocialPost(publishNow = false) {
             if (document.getElementById('postMetaTitleInput')) document.getElementById('postMetaTitleInput').value = '';
             if (document.getElementById('postMetaDescInput')) document.getElementById('postMetaDescInput').value = '';
             if (document.getElementById('postMetaKeywordsInput')) document.getElementById('postMetaKeywordsInput').value = '';
-            if (document.getElementById('postImageInput')) document.getElementById('postImageInput').value = '';
-            if (document.getElementById('postScheduleInput')) document.getElementById('postScheduleInput').value = '';
             updateMetaCounters();
             loadPosts();
             loadOverview();
@@ -1974,6 +2205,9 @@ async function triggerAutoCreatePost(keyword = '') {
         keyword = document.getElementById('wpKeywordSelect')?.value || '';
     }
     const imageUrl = document.getElementById('postImageInput')?.value?.trim() || '';
+    const secondaryImageUrl = document.getElementById('postSecondaryImageInput')?.value?.trim() || '';
+    const secondaryImageAlt = document.getElementById('postSecondaryImageAltInput')?.value?.trim() || '';
+    const ctaUrl = document.getElementById('postCtaUrlInput')?.value?.trim() || '';
     const btn = event?.target?.closest('button');
     const origHtml = btn ? btn.innerHTML : '';
     if (btn) {
@@ -1987,7 +2221,15 @@ async function triggerAutoCreatePost(keyword = '') {
         const res = await fetch('api.php?action=auto_create_and_publish', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ keyword, image_url: imageUrl })
+            body: JSON.stringify({
+                keyword,
+                image_url: imageUrl,
+                secondary_image_url: secondaryImageUrl,
+                secondary_image_alt: secondaryImageAlt,
+                cta_url: ctaUrl,
+                categories: wpSelectedCategoryIds,
+                tags: wpSelectedTagIds
+            })
         });
         const data = await res.json();
         if (data.success) {
@@ -2195,6 +2437,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadOverview();
     loadPosts();
     generateLocalSchema();
+    syncWpTaxonomies(false);
 
     // Switch tab if present in URL (e.g. from Google OAuth callback)
     const urlParams = new URLSearchParams(window.location.search);

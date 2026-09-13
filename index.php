@@ -723,44 +723,156 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Call-To-Action (CTA) Button</label>
-                        <select class="form-control" id="postCtaSelect">
-                            <option value="LEARN_MORE">Learn More</option>
-                            <option value="BOOK">Book Appointment</option>
-                            <option value="CALL">Call Now</option>
-                            <option value="SIGN_UP">Sign Up</option>
-                        </select>
+                <!-- Step 5: Secondary In-Content Image & SEO Alt Text Studio (Image 4 Style) -->
+                <div class="form-group" style="background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.22); border-radius: 12px; padding: 16px 18px; margin-bottom: 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                        <label class="form-label" style="margin:0; font-size: 0.85rem; font-weight: 700; color: #F8FAFC; display:flex; align-items:center; gap: 8px;">
+                            <i class="fas fa-images" style="color: #38BDF8;"></i> Secondary In-Content Image & SEO Alt Text
+                        </label>
+                        <span style="font-size: 0.74rem; color: #94A3B8;">Embedded inside blog body with keyword-optimized ALT tag & caption</span>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">CTA Target Destination Link</label>
-                        <input type="url" class="form-control" id="postCtaUrlInput" placeholder="https://codespark.online/contact/" value="https://codespark.online/contact/">
+                    
+                    <div style="display: grid; grid-template-columns: 140px 1fr; gap: 16px; align-items: center; margin-bottom: 12px;">
+                        <!-- Live Secondary Image Thumbnail Preview -->
+                        <div style="width: 140px; height: 95px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: #070a13; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative;">
+                            <img id="wpSecondaryImagePreview" src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1000&auto=format&fit=crop" alt="Secondary Image Preview" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.style.display='none'; document.getElementById('wpSecondaryPlaceholder').style.display='flex';">
+                            <div id="wpSecondaryPlaceholder" style="display: none; flex-direction: column; align-items: center; justify-content: center; color: #64748B; font-size: 0.75rem; text-align: center; padding: 6px;">
+                                <i class="fas fa-image" style="font-size: 1.4rem; margin-bottom: 4px;"></i>
+                                No Image
+                            </div>
+                        </div>
+
+                        <!-- Secondary Image URL & Presets -->
+                        <div>
+                            <input type="url" class="form-control" id="postSecondaryImageInput" placeholder="https://images.unsplash.com/..." value="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1000&auto=format&fit=crop" oninput="updateWpSecondaryImagePreview(this.value)" style="margin-bottom: 10px;">
+                            
+                            <!-- Quick In-Content Image Presets -->
+                            <div style="display:flex; align-items:center; gap: 8px; flex-wrap: wrap;">
+                                <span style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700;">Presets:</span>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="setWpSecondaryImage('https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=1000&auto=format&fit=crop', 'Custom Mobile App Development in Tirunelveli | CodeSpark builds scalable iOS and Android applications.')" style="padding: 3px 8px; font-size: 0.72rem;">📱 App Design</button>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="setWpSecondaryImage('https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1000&auto=format&fit=crop', 'Professional Software Solutions & Internship in Tirunelveli | CodeSpark offers practical live project mentorship.')" style="padding: 3px 8px; font-size: 0.72rem;">🎓 Internship Work</button>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="setWpSecondaryImage('https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=1000&auto=format&fit=crop', 'GST Billing & POS Software in Tirunelveli | Fast barcode scanning, accounting and stock management by Codespark.')" style="padding: 3px 8px; font-size: 0.72rem;">🧾 POS Counter</button>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="setWpSecondaryImage('https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=1000&auto=format&fit=crop', 'Enterprise Cloud Hosting & Server Infrastructure in Tirunelveli | High speed 99.9% uptime by Codespark.')" style="padding: 3px 8px; font-size: 0.72rem;">☁️ Cloud Server</button>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="setWpSecondaryImage('https://images.unsplash.com/photo-1557838923-2985c318be48?w=1000&auto=format&fit=crop', 'Top Ranking SEO & Digital Marketing in Tirunelveli | Dominate Google 1st Page with Codespark.')" style="padding: 3px 8px; font-size: 0.72rem;">📈 SEO Growth</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Image Alt Text Field (User Image 4 Requirement) -->
+                    <div>
+                        <label class="form-label" style="font-size:0.82rem; margin-bottom: 4px; color: #94A3B8;">Image Alt Tag & Caption (Required for Google Image SEO)</label>
+                        <input type="text" class="form-control" id="postSecondaryImageAltInput" value="Professional Software Solutions in Tirunelveli | CodeSpark offers SEO, website development, and Android & iOS mobile app development services." placeholder="e.g. Professional Software Solutions in Tirunelveli | CodeSpark offers SEO, website development...">
                     </div>
                 </div>
 
+                <!-- Step 6: Target Codespark Landing Page & Form Management -->
+                <div class="form-group" style="background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 16px 18px; margin-bottom: 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                        <label class="form-label" style="margin:0; font-size: 0.85rem; font-weight: 700; color: #F8FAFC; display:flex; align-items:center; gap: 8px;">
+                            <i class="fas fa-link" style="color: #60A5FA;"></i> Target Landing Page & Lead Form (Codespark.online)
+                        </label>
+                        <span style="font-size: 0.74rem; color: #94A3B8;">Auto-mapped per keyword; drives users to specific inquiry/application form</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" style="font-size:0.82rem;">Select Target Landing Page / Form</label>
+                            <select class="form-control" id="wpLandingPageSelect" onchange="onLandingPageSelectChange(this.value)">
+                                <option value="https://codespark.online/best-website-design-for-your-business/">💻 Best Website Design (https://codespark.online/best-website-design-for-your-business/)</option>
+                                <option value="https://codespark.online/easy-billing-software/">🧾 Easy Billing Software (https://codespark.online/easy-billing-software/)</option>
+                                <option value="https://codespark.online/internship-for-students/">🎓 Internship for Students (https://codespark.online/internship-for-students/)</option>
+                                <option value="https://codespark.online/internship/">👨‍🎓 IT Career & Internship (https://codespark.online/internship/)</option>
+                                <option value="https://codespark.online/digital-marketing-for-your-business/">📈 Digital Marketing & SEO (https://codespark.online/digital-marketing-for-your-business/)</option>
+                                <option value="https://codespark.online/cloud-hosting-provider/">☁️ Cloud Hosting Provider (https://codespark.online/cloud-hosting-provider/)</option>
+                                <option value="https://codespark.online/contact/">📱 General Contact & Inquiries (https://codespark.online/contact/)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" style="font-size:0.82rem;">Custom / Active Destination Link</label>
+                            <input type="url" class="form-control" id="postCtaUrlInput" value="https://codespark.online/best-website-design-for-your-business/" placeholder="https://codespark.online/...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 7: WordPress Categories & Tags Studio -->
+                <div class="form-group" style="background: #0f172a; border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 12px; padding: 16px 18px; margin-bottom: 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                        <div>
+                            <strong style="color: #4ADE80; font-size: 0.88rem; display:flex; align-items:center; gap: 8px;">
+                                <i class="fas fa-tags"></i> WordPress Categories & Tags (codespark.online)
+                            </strong>
+                            <p style="font-size: 0.76rem; color: #94A3B8; margin: 3px 0 0 0;">Auto-assigned by AI based on keyword, synced live with WordPress taxonomy taxonomy IDs.</p>
+                        </div>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="syncWpTaxonomies(true)" style="padding: 4px 10px; font-size: 0.74rem; border-color: rgba(74, 222, 128, 0.35); color: #4ADE80;">
+                            <i class="fas fa-sync-alt"></i> Sync with WordPress
+                        </button>
+                    </div>
+
+                    <!-- Selected Categories Badges -->
+                    <div style="margin-bottom: 12px;">
+                        <label class="form-label" style="font-size: 0.8rem; margin-bottom: 6px; color: #cbd5e1;">Active WordPress Categories:</label>
+                        <div id="wpSelectedCategoriesContainer" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 32px; padding: 6px 10px; background: #070a13; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+                            <span style="font-size: 0.75rem; color: #64748B;">Loading categories from codespark.online...</span>
+                        </div>
+                    </div>
+
+                    <!-- Quick Category Picker / Dropdown -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label class="form-label" style="font-size: 0.78rem; margin-bottom: 4px;">Available Categories (Click to toggle):</label>
+                            <select class="form-control" id="wpCategorySelector" onchange="toggleCategoryFromSelect(this.value)" style="font-size: 0.82rem; height: 38px;">
+                                <option value="">-- Choose Category to Add/Remove --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size: 0.78rem; margin-bottom: 4px;">Available Tags (Click to toggle):</label>
+                            <select class="form-control" id="wpTagSelector" onchange="toggleTagFromSelect(this.value)" style="font-size: 0.82rem; height: 38px;">
+                                <option value="">-- Choose Tag to Add/Remove --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Selected Tags Badges -->
+                    <div style="margin-top: 10px;">
+                        <label class="form-label" style="font-size: 0.8rem; margin-bottom: 6px; color: #cbd5e1;">Active WordPress Tags:</label>
+                        <div id="wpSelectedTagsContainer" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 32px; padding: 6px 10px; background: #070a13; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+                            <span style="font-size: 0.75rem; color: #64748B;">Loading tags from codespark.online...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Call-To-Action (CTA) Button Type</label>
+                        <select class="form-control" id="postCtaSelect">
+                            <option value="LEARN_MORE">Learn More / Apply Now</option>
+                            <option value="BOOK">Book Free Consultation</option>
+                            <option value="CALL">Call Team Directly</option>
+                            <option value="SIGN_UP">Sign Up / Register</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label class="form-label">Destination Channel</label>
-                        <div style="display:flex; flex-wrap: wrap; gap: 16px; margin-top: 6px;">
+                        <div style="display:flex; flex-wrap: wrap; gap: 16px; margin-top: 8px;">
                             <label style="display:flex; align-items:center; gap: 8px; cursor: pointer; font-weight: 500;">
                                 <input type="checkbox" id="platWordpress" checked style="accent-color: var(--primary);"> <i class="fab fa-wordpress" style="color: #21759B; font-size: 1.15rem;"></i> WordPress (codespark.online)
                             </label>
                         </div>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Schedule Time (Leave blank to publish immediately)</label>
-                        <input type="datetime-local" class="form-control" id="postScheduleInput">
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Schedule Time (Leave blank to publish immediately)</label>
+                    <input type="datetime-local" class="form-control" id="postScheduleInput">
+                </div>
 
-                    <div style="display:flex; gap: 12px; margin-top: 14px;">
-                        <button class="btn btn-primary" id="btnPublishNow" onclick="submitSocialPost(true)">
-                            <i class="fab fa-wordpress"></i> Publish Now to WordPress
-                        </button>
-                        <button class="btn btn-outline" id="btnScheduleLater" onclick="submitSocialPost(false)">
-                            <i class="fas fa-clock"></i> Schedule For Later
-                        </button>
-                    </div>
+                <div style="display:flex; gap: 12px; margin-top: 14px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" id="btnPublishNow" onclick="submitSocialPost(true)">
+                        <i class="fab fa-wordpress"></i> Publish Now to WordPress
+                    </button>
+                    <button class="btn btn-outline" id="btnScheduleLater" onclick="submitSocialPost(false)">
+                        <i class="fas fa-clock"></i> Schedule For Later
+                    </button>
+                </div>
             </div>
 
 

@@ -823,11 +823,23 @@ Return ONLY valid JSON.";
             }
         }
 
-        $imageFigure = '';
-        if (!empty($imageUrl)) {
-            $imageFigure = "<figure class='wp-block-image size-large' style='margin:0 0 24px 0;'><img src='{$imageUrl}' alt='{$metaTitle}' class='wp-image-featured' style='width:100%;max-height:480px;object-fit:cover;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.1);'></figure>\n\n";
-        }
-        $contentWithImage = $imageFigure . $content;
+        // Secondary In-Content Image, Alt text & Specific Landing Page URL
+        $secImg = getSecondaryImageForKeyword($chosenKw, $metaTitle);
+        $secondaryUrl = trim($params['secondary_image_url'] ?? $secImg['url']);
+        $secondaryAlt = trim($params['secondary_image_alt'] ?? $secImg['alt']);
+        $landingUrl = trim($params['cta_url'] ?? getCodesparkLandingPageForKeyword($chosenKw));
+
+        // Render full rich content with H1 heading, images, authority links, and lead card
+        $contentWithImage = renderRichPostContent(
+            $metaTitle,
+            $content,
+            $chosenKw,
+            $imageUrl,
+            $secondaryUrl,
+            $secondaryAlt,
+            $landingUrl,
+            'LEARN_MORE'
+        );
 
         // Prepare Rich JSON-LD SEO Schema for Google indexing
         $schemaData = [
@@ -859,7 +871,7 @@ Return ONLY valid JSON.";
         ];
         $schemaScript = "\n\n<!-- Local SEO Schema & Meta Injected by LocalRank Pro -->\n<script type=\"application/ld+json\">\n" . json_encode($schemaData, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n</script>";
 
-        // Publish live to WordPress Posts with Meta Title, Excerpt & Rank Math / Yoast fields
+        // Publish live to WordPress Posts with Categories, Tags, Meta Title, Excerpt & Rank Math / Yoast fields
         $wpUrl = rtrim($config['settings']['wp_rest_url'] ?? 'https://codespark.online', '/') . '/wp-json/wp/v2/posts';
         $user = $config['settings']['wp_rest_username'] ?? 'Codespark';
         $pass = $config['settings']['wp_rest_app_password'] ?? '';
@@ -868,11 +880,17 @@ Return ONLY valid JSON.";
             jsonResponse(['error' => 'WordPress REST Application Password is not configured in Settings.'], 400);
         }
 
+        $taxMatch = getMatchingTaxonomiesForKeyword($chosenKw);
+        $categories = !empty($params['categories']) && is_array($params['categories']) ? array_map('intval', $params['categories']) : $taxMatch['categories'];
+        $tags = !empty($params['tags']) && is_array($params['tags']) ? array_map('intval', $params['tags']) : $taxMatch['tags'];
+
         $wpPostData = [
             'title' => $metaTitle,
             'excerpt' => $metaDescription,
             'content' => $contentWithImage . $schemaScript,
             'status' => 'publish',
+            'categories' => $categories,
+            'tags' => $tags,
             'meta' => [
                 'rank_math_title' => $metaTitle,
                 'rank_math_description' => $metaDescription,
@@ -1027,6 +1045,15 @@ Return ONLY JSON.";
             $imageUrl = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop';
         }
 
+        // Match Secondary In-Content Image & Alt Text
+        $secImg = getSecondaryImageForKeyword($topic, $metaTitle);
+        // Match specific Codespark Landing Page URL
+        $ctaTargetUrl = getCodesparkLandingPageForKeyword($topic);
+        // Match WordPress Categories and Tags
+        $matchedTax = getMatchingTaxonomiesForKeyword($topic);
+        // Match Authority Reference Links
+        $authLinks = getAuthorityLinksForKeyword($topic);
+
         jsonResponse([
             'success' => true,
             'title' => ucwords($baseTitle) . " - " . $bizName,
@@ -1034,7 +1061,55 @@ Return ONLY JSON.";
             'meta_title' => $metaTitle,
             'meta_description' => $metaDesc,
             'meta_keywords' => $metaKeywords,
-            'image_url' => $imageUrl
+            'image_url' => $imageUrl,
+            'secondary_image_url' => $secImg['url'],
+            'secondary_image_alt' => $secImg['alt'],
+            'cta_url' => $ctaTargetUrl,
+            'suggested_categories' => $matchedTax['categories'],
+            'suggested_tags' => $matchedTax['tags'],
+            'authority_links' => $authLinks
+        ]);
+        break;
+
+    // ==========================================
+    // 8.6 WORDPRESS TAXONOMIES (CATEGORIES & TAGS)
+    // ==========================================
+    case 'get_wp_taxonomies':
+        $taxFile = APP_ROOT . '/wp_taxonomies.json';
+        $force = !empty($_GET['force']) || !empty($params['force']);
+        $cached = [];
+        if (file_exists($taxFile) && !$force) {
+            $cached = json_decode(file_get_contents($taxFile), true) ?: [];
+        }
+
+        if (empty($cached) || (time() - ($cached['updated_at'] ?? 0) > 86400) || $force) {
+            $wpUrl = rtrim($config['settings']['wp_rest_url'] ?? 'https://codespark.online', '/');
+            $catRaw = @file_get_contents("{$wpUrl}/wp-json/wp/v2/categories?per_page=100");
+            $cats = json_decode($catRaw, true) ?: [];
+            $tagRaw = @file_get_contents("{$wpUrl}/wp-json/wp/v2/tags?per_page=100");
+            $tags = json_decode($tagRaw, true) ?: [];
+
+            $cleanCats = array_map(function($c) {
+                return ['id' => $c['id'], 'name' => $c['name'], 'slug' => $c['slug'], 'count' => $c['count']];
+            }, $cats);
+            $cleanTags = array_map(function($t) {
+                return ['id' => $t['id'], 'name' => $t['name'], 'slug' => $t['slug'], 'count' => $t['count']];
+            }, $tags);
+
+            $cached = [
+                'categories' => $cleanCats,
+                'tags' => $cleanTags,
+                'updated_at' => time()
+            ];
+            file_put_contents($taxFile, json_encode($cached, JSON_PRETTY_PRINT));
+        }
+
+        jsonResponse([
+            'success' => true,
+            'categories' => $cached['categories'] ?? [],
+            'tags' => $cached['tags'] ?? [],
+            'landing_pages' => getCodesparkLandingPages(),
+            'updated_at' => $cached['updated_at'] ?? time()
         ]);
         break;
 
@@ -1441,15 +1516,30 @@ Output ONLY valid JSON with keys:
             $pass = $config['settings']['wp_rest_app_password'] ?? '';
             
             if (!empty($pass)) {
-                $imageHtml = '';
-                if (!empty($imageUrl)) {
-                    $imageHtml = "<figure class='wp-block-image size-large' style='margin:0 0 24px 0;'><img src='" . htmlspecialchars($imageUrl) . "' alt='" . htmlspecialchars($metaTitle) . "' class='wp-image-featured' style='width:100%;max-height:480px;object-fit:cover;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,0.1);'></figure>\n\n";
+                $secondaryUrl = trim($params['secondary_image_url'] ?? '');
+                $secondaryAlt = trim($params['secondary_image_alt'] ?? '');
+                if (empty($secondaryUrl)) {
+                    $secAuto = getSecondaryImageForKeyword($metaKeywords ?: $title, $metaTitle);
+                    $secondaryUrl = $secAuto['url'];
+                    $secondaryAlt = $secAuto['alt'];
                 }
-                $postBody = $imageHtml . "<p>" . nl2br(htmlspecialchars($content)) . "</p>";
-                if (!empty($ctaUrl)) {
-                    $postBody .= "<p><a href='" . htmlspecialchars($ctaUrl) . "' target='_blank' style='display:inline-block;padding:10px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;'>" . htmlspecialchars($ctaType) . "</a></p>";
-                }
-                $postBody .= "<p>Visit <strong>Codespark Software Development</strong> in Melapalayam, Tirunelveli or call <strong>+91 81108 99000</strong>.</p>";
+
+                $landingUrl = trim($params['cta_url'] ?? getCodesparkLandingPageForKeyword($metaKeywords ?: $title));
+                $taxMatch = getMatchingTaxonomiesForKeyword($metaKeywords ?: $title);
+                $categories = !empty($params['categories']) && is_array($params['categories']) ? array_map('intval', $params['categories']) : $taxMatch['categories'];
+                $tags = !empty($params['tags']) && is_array($params['tags']) ? array_map('intval', $params['tags']) : $taxMatch['tags'];
+
+                // Guarantees prominent H1 Heading, featured & secondary images with alt, authority links & lead card
+                $postBody = renderRichPostContent(
+                    $title ?: $metaTitle,
+                    $content,
+                    $metaKeywords ?: $title,
+                    $imageUrl,
+                    $secondaryUrl,
+                    $secondaryAlt,
+                    $landingUrl,
+                    $ctaType
+                );
                 
                 // Embed Rich JSON-LD SEO Schema
                 $schemaArray = [
@@ -1481,6 +1571,8 @@ Output ONLY valid JSON with keys:
                     'excerpt' => $metaDesc,
                     'content' => $postBodyWithSchema,
                     'status' => 'publish',
+                    'categories' => $categories,
+                    'tags' => $tags,
                     'meta' => [
                         'rank_math_title' => $metaTitle,
                         'rank_math_description' => $metaDesc,
