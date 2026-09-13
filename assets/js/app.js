@@ -1742,6 +1742,9 @@ async function generateAiPostBody() {
             btn.disabled = false;
             btn.innerHTML = origHtml;
         }
+    }
+}
+
 // -------------------------------------------------------------
 // WordPress Taxonomies, Landing Pages & Multi-Image Studio State
 // -------------------------------------------------------------
