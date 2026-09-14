@@ -463,7 +463,7 @@ function buildLeadMagnetBox($title, $landingUrl, $ctaLabel, $kw, $location = '')
 // -------------------------------------------------------------
 // Complete Rich HTML Article Builder (Heading + Images + Authority + Lead)
 // -------------------------------------------------------------
-function renderRichPostContent($title, $content, $kw, $primaryImg = '', $secondaryImg = '', $secondaryAlt = '', $ctaUrl = '', $ctaType = 'LEARN_MORE', $location = '') {
+function renderRichPostContent($title, $content, $kw, $primaryImg = '', $secondaryImg = '', $secondaryAlt = '', $ctaUrl = '', $ctaType = 'LEARN_MORE', $location = '', $includePrimaryInBody = false) {
     if (empty($primaryImg)) {
         $primaryImg = getPrimaryImageForKeyword($kw);
     }
@@ -471,8 +471,11 @@ function renderRichPostContent($title, $content, $kw, $primaryImg = '', $seconda
     $cleanTitle = htmlspecialchars($title);
     $html = "<h1 class='wp-post-main-heading' style='font-size: 2.15rem; font-weight: 800; color: #0f172a; margin: 16px 0 24px 0; line-height: 1.35; letter-spacing: -0.02em;'>{$cleanTitle}</h1>\n\n";
     
-    // 2. Primary Featured Image
-    if (!empty($primaryImg)) {
+    // 2. Primary Featured Image - Only inserted into body if explicitly requested ($includePrimaryInBody = true).
+    // In WordPress (codespark.online), the primary image is attached as native featured_media, which the theme
+    // already displays at the top of the single post (with date badge) and on the /blog/ archive grid cards.
+    // Omitting it here prevents the image from repeating twice.
+    if ($includePrimaryInBody && !empty($primaryImg)) {
         $html .= "<figure class='wp-block-image size-large' style='margin: 0 0 26px 0;'><img src='" . htmlspecialchars($primaryImg) . "' alt='{$cleanTitle}' class='wp-image-featured' style='width: 100%; max-height: 480px; object-fit: cover; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.08);'></figure>\n\n";
     }
     

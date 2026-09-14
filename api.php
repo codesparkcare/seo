@@ -1837,11 +1837,10 @@ Output ONLY valid JSON with keys:
 
                 $postBodyWithSchema = $postBody . "\n\n<script type=\"application/ld+json\">\n{$schemaJson}\n</script>";
 
-                $ch = curl_init($wpUrl);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_POST, true);
-                curl_setopt($ch, CURLOPT_USERPWD, "{$user}:{$pass}");
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+                $wpBase = rtrim($config['settings']['wp_rest_url'] ?? 'https://codespark.online', '/');
+                $featuredMediaId = uploadOrGetFeaturedMediaId($imageUrl, $metaTitle, $user, $pass, $wpBase);
+
+                $postPayload = [
                     'title' => $metaTitle,
                     'excerpt' => $metaDesc,
                     'content' => $postBodyWithSchema,
@@ -1856,7 +1855,16 @@ Output ONLY valid JSON with keys:
                         '_yoast_wpseo_metadesc' => $metaDesc,
                         '_yoast_wpseo_focuskw' => $metaKeywords
                     ]
-                ]));
+                ];
+                if ($featuredMediaId > 0) {
+                    $postPayload['featured_media'] = $featuredMediaId;
+                }
+
+                $ch = curl_init($wpUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_USERPWD, "{$user}:{$pass}");
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postPayload));
                 curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
                 $res = curl_exec($ch);
