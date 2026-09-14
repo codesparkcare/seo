@@ -555,12 +555,35 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
 
                 <div class="form-row" style="margin-bottom: 16px;">
                     <div class="form-group">
-                        <label class="form-label">Services (comma separated)</label>
+                        <label class="form-label"><i class="fas fa-cogs" style="color: var(--secondary);"></i> Services (comma separated)</label>
                         <input type="text" class="form-control" id="programmaticServices" value="Software Company, Mobile App Development, Billing Software, Web Design, Custom ERP Development">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Target Cities / Localities (up to 60 km radius)</label>
-                        <input type="text" class="form-control" id="programmaticLocations" value="Melapalayam, Palayamkottai, Tenkasi, Thoothukudi, Kovilpatti, Ambasamudram, Valliyur, Nanguneri, Cheranmahadevi, Sankarankovil, Tiruchendur">
+                        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                            <label class="form-label"><i class="fas fa-map-marker-alt" style="color: #ef4444;"></i> Target Cities / Localities (Any City or Region)</label>
+                            <span style="font-size: 0.75rem; color: #10b981; font-weight: 500;"><i class="fas fa-check-circle"></i> Supports Any City</span>
+                        </div>
+                        <input type="text" class="form-control" id="programmaticLocations" value="Chennai, Madurai, Coimbatore, Tirunelveli, Tenkasi, Thoothukudi, Trichy, Salem">
+                        
+                        <!-- Quick Location Presets -->
+                        <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                            <span style="font-size: 0.74rem; color: var(--text-muted); font-weight: 600;"><i class="fas fa-plus-circle"></i> Quick Presets:</span>
+                            <button type="button" class="btn btn-outline btn-xs" onclick="addLocationPreset('Chennai, Madurai, Coimbatore')">
+                                <i class="fas fa-city"></i> + Chennai, Madurai, CBE
+                            </button>
+                            <button type="button" class="btn btn-outline btn-xs" onclick="addLocationPreset('Trichy, Salem, Erode, Tiruppur')">
+                                <i class="fas fa-map-pin"></i> + Trichy, Salem, Erode
+                            </button>
+                            <button type="button" class="btn btn-outline btn-xs" onclick="addLocationPreset('Tirunelveli, Tenkasi, Thoothukudi, Kovilpatti, Nagercoil')">
+                                <i class="fas fa-compass"></i> + South TN Towns
+                            </button>
+                            <button type="button" class="btn btn-outline btn-xs" onclick="addLocationPreset('Bangalore, Kochi, Trivandrum, Hyderabad')">
+                                <i class="fas fa-globe-asia"></i> + Metros
+                            </button>
+                            <button type="button" class="btn btn-outline btn-xs" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.4);" onclick="clearLocations()">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -1510,6 +1533,63 @@ At Codespark Software Development, we build high-performance mobile apps, digita
                 <button class="btn btn-outline" onclick="closeReplyModal()">Close</button>
                 <button class="btn btn-success" onclick="submitReviewReply()">
                     <i class="fas fa-check"></i> Save Local SEO Reply
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- LOCAL LANDING PAGE BLUEPRINT PREVIEW MODAL -->
+<div id="localBlueprintModal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.78); backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-active); border-radius: var(--radius-md); max-width: 680px; width: 100%; padding: 24px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); max-height: 90vh; overflow-y: auto;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+            <div style="display:flex; align-items:center; gap: 10px;">
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(99, 102, 241, 0.15); display:flex; align-items:center; justify-content:center; color: var(--secondary);">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <div>
+                    <h3 style="margin:0; font-size: 1.15rem;" id="blueprintModalTitle">Local Landing Blueprint</h3>
+                    <span style="font-size: 0.78rem; color: var(--text-muted);" id="blueprintModalLocality">Target Locality</span>
+                </div>
+            </div>
+            <button onclick="closeBlueprintModal()" style="background:transparent; border:none; color: var(--text-dim); font-size: 1.2rem; cursor:pointer;"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap: 14px;">
+            <div>
+                <label style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600;">Target URL Slug</label>
+                <div id="blueprintModalSlug" style="font-family: monospace; font-size: 0.88rem; color: var(--secondary); background: rgba(99,102,241,0.08); padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(99,102,241,0.2);"></div>
+            </div>
+
+            <div>
+                <label style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600;">SEO Meta Title Tag</label>
+                <div id="blueprintModalSeoTitle" style="font-weight: 600; font-size: 0.92rem; color: #fff; background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color);"></div>
+            </div>
+
+            <div>
+                <label style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600;">Meta Description</label>
+                <div id="blueprintModalMetaDesc" style="font-size: 0.85rem; color: var(--text-muted); background: rgba(255,255,255,0.03); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color);"></div>
+            </div>
+
+            <div>
+                <label style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600;">Page Content Preview (H1, FAQs & Conversion Callout)</label>
+                <div id="blueprintModalBody" style="font-size: 0.85rem; color: var(--text-secondary); background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); max-height: 180px; overflow-y: auto; line-height: 1.5;"></div>
+            </div>
+
+            <div>
+                <label style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600;">LocalBusiness & FAQ JSON-LD Schema</label>
+                <pre id="blueprintModalSchema" style="font-family: monospace; font-size: 0.75rem; color: #34d399; background: #080c14; padding: 10px; border-radius: 6px; border: 1px solid rgba(52,211,153,0.25); overflow-x: auto; max-height: 140px; margin: 0;"></pre>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 14px;">
+            <button class="btn btn-outline btn-sm" onclick="copyBlueprintHtml()">
+                <i class="fas fa-copy"></i> Copy HTML
+            </button>
+            <div style="display:flex; gap: 10px;">
+                <button class="btn btn-outline" onclick="closeBlueprintModal()">Close</button>
+                <button class="btn btn-success" id="btnModalPublishWp" onclick="publishModalBlueprintToWp()">
+                    <i class="fab fa-wordpress"></i> Publish to WordPress Now
                 </button>
             </div>
         </div>

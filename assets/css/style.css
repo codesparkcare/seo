@@ -335,6 +335,12 @@ body {
   font-size: 0.78rem;
 }
 
+.btn-xs {
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  border-radius: 4px;
+}
+
 /* KPI Cards Grid */
 .kpi-grid {
   display: grid;

@@ -940,10 +940,13 @@ async function publishPageToWordPress(index, btn) {
     const content = `
 <h2>${page.h1}</h2>
 <p>${page.meta_description}</p>
+<div style="background:#f8fafc; border-left:4px solid #3b82f6; padding:16px; margin:20px 0; border-radius:4px;">
+    <h3 style="margin-top:0; color:#1e3a8a;">Professional ${page.service} Serving ${page.location}</h3>
+    <p>Codespark Technology provides enterprise-grade, high-performance technology services in <strong>${page.location}</strong> and across Tamil Nadu. Contact our dedicated solutions team today at +91 81108 99000.</p>
+</div>
 <h3>Frequently Asked Questions</h3>
 <p><strong>${page.faqs[0].q}</strong></p>
 <p>${page.faqs[0].a}</p>
-<p>Visit <strong>Codespark Software Development</strong> in Melapalayam, Tirunelveli or call +91 81108 99000.</p>
     `.trim();
 
     try {
@@ -972,6 +975,114 @@ async function publishPageToWordPress(index, btn) {
         btn.disabled = false;
         btn.innerHTML = origHtml;
     }
+}
+
+// Location Presets Helpers
+function addLocationPreset(cities, replace = false) {
+    const input = document.getElementById('programmaticLocations');
+    if (!input) return;
+    if (replace || !input.value.trim()) {
+        input.value = cities;
+    } else {
+        const currentList = input.value.split(',').map(s => s.trim()).filter(Boolean);
+        const toAddList = cities.split(',').map(s => s.trim()).filter(Boolean);
+        const merged = Array.from(new Set([...currentList, ...toAddList]));
+        input.value = merged.join(', ');
+    }
+    showToast('Target cities updated!', 'info');
+}
+
+function clearLocations() {
+    const input = document.getElementById('programmaticLocations');
+    if (input) {
+        input.value = '';
+        input.focus();
+        showToast('Locations cleared. Type any city name.', 'info');
+    }
+}
+
+// Blueprint Modal Handlers
+let currentActiveBlueprintIndex = null;
+
+function showLocalPageBlueprint(index) {
+    const page = window.generatedLocalPages ? window.generatedLocalPages[index] : null;
+    if (!page) return;
+    currentActiveBlueprintIndex = index;
+
+    const modal = document.getElementById('localBlueprintModal');
+    if (!modal) return;
+
+    document.getElementById('blueprintModalTitle').textContent = `${page.service} in ${page.location}`;
+    document.getElementById('blueprintModalLocality').textContent = `Target Locality: ${page.location}`;
+    document.getElementById('blueprintModalSlug').textContent = page.slug;
+    document.getElementById('blueprintModalSeoTitle').textContent = page.title;
+    document.getElementById('blueprintModalMetaDesc').textContent = page.meta_description;
+    
+    document.getElementById('blueprintModalBody').innerHTML = `
+        <h4 style="margin:0 0 6px 0; color:#fff;">&lt;h1&gt; ${escapeHtml(page.h1)} &lt;/h1&gt;</h4>
+        <p style="margin:0 0 10px 0;">${escapeHtml(page.meta_description)}</p>
+        <div style="background:rgba(255,255,255,0.05); padding:8px 10px; border-radius:4px; margin-bottom:8px;">
+            <strong style="color:var(--secondary); font-size:0.8rem;">FAQ: ${escapeHtml(page.faqs[0].q)}</strong>
+            <p style="margin:4px 0 0 0; font-size:0.78rem;">${escapeHtml(page.faqs[0].a)}</p>
+        </div>
+    `;
+
+    const schemaObj = {
+        "@context": "https://schema.org",
+        "@type": "Service",
+        "name": `${page.service} in ${page.location}`,
+        "provider": {
+            "@type": "LocalBusiness",
+            "name": "Codespark Software Development",
+            "telephone": "+918110899000",
+            "url": "https://codespark.online"
+        },
+        "areaServed": {
+            "@type": "City",
+            "name": page.location
+        },
+        "description": page.meta_description
+    };
+    document.getElementById('blueprintModalSchema').textContent = JSON.stringify(schemaObj, null, 2);
+
+    modal.style.display = 'flex';
+}
+
+function closeBlueprintModal() {
+    const modal = document.getElementById('localBlueprintModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function copyBlueprintHtml() {
+    if (currentActiveBlueprintIndex === null || !window.generatedLocalPages) return;
+    const page = window.generatedLocalPages[currentActiveBlueprintIndex];
+    if (!page) return;
+
+    const fullHtml = `<!-- SEO Landing Page: ${page.title} -->
+<h1>${page.h1}</h1>
+<p>${page.meta_description}</p>
+<div class="service-highlight">
+    <h2>Premier ${page.service} in ${page.location}</h2>
+    <p>Delivering cutting-edge web, mobile, and enterprise digital solutions tailored for businesses in ${page.location}.</p>
+</div>
+<h3>Frequently Asked Questions</h3>
+<p><strong>${page.faqs[0].q}</strong></p>
+<p>${page.faqs[0].a}</p>
+<script type="application/ld+json">
+${document.getElementById('blueprintModalSchema').textContent}
+</script>`;
+
+    navigator.clipboard.writeText(fullHtml).then(() => {
+        showToast('Full HTML & Schema copied to clipboard!', 'success');
+    }).catch(() => {
+        showToast('Failed to copy to clipboard', 'error');
+    });
+}
+
+async function publishModalBlueprintToWp() {
+    if (currentActiveBlueprintIndex === null) return;
+    const btn = document.getElementById('btnModalPublishWp');
+    await publishPageToWordPress(currentActiveBlueprintIndex, btn);
 }
 
 // 7. SOCIAL & CITATION SYNDICATOR
