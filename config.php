@@ -56,17 +56,17 @@ function getAuthUsers() {
     return [
         [
             'id' => 'usr_admin',
-            'username' => 'admin',
-            'password_hash' => '$2y$10$ztJ7oxcPBnKbkf/udxjEq.PPY8BiCrH2lAUgEDv.88BomUJg2Q1Ey', // admin123
+            'username' => 'Codespark',
+            'password_hash' => '$2y$10$GnRll56CDzb1nXBU4mwrEOMaEwlr6pD.6XfjcIBwNkL15oMwW0M7m', // Encrypted hash for RathiAK
             'role' => 'admin',
             'name' => 'Codespark Admin'
         ],
         [
             'id' => 'usr_manager',
-            'username' => 'manager',
-            'password_hash' => '$2y$10$H8FAK2mw7GpD9t6eF/.InutYg/uec4rRK5ds2qE9jr0FZZVqasUgm', // manager123
+            'username' => 'seostaff',
+            'password_hash' => '$2y$10$S1qdrRIwfR7bkKRXCZOqVuHZJdThrH3lrQ8j7.vGmWJFSGBxGsyFS', // Encrypted hash for SeoCodes@123*
             'role' => 'manager',
-            'name' => 'Operations Manager'
+            'name' => 'SEO Staff Manager'
         ]
     ];
 }
@@ -82,16 +82,8 @@ function authenticateUser($username, $password) {
     foreach ($users as $user) {
         if (strtolower($user['username']) === $username) {
             $hash = $user['password_hash'] ?? '';
-            $valid = false;
+            // Strictly verify against encrypted bcrypt hash - no plaintext fallbacks
             if (!empty($hash) && password_verify($password, $hash)) {
-                $valid = true;
-            } elseif ($username === 'admin' && ($password === 'admin123' || $password === 'admin')) {
-                $valid = true;
-            } elseif ($username === 'manager' && ($password === 'manager123' || $password === 'manager')) {
-                $valid = true;
-            }
-            
-            if ($valid) {
                 startAuthSession();
                 $_SESSION['auth_user'] = [
                     'id' => $user['id'] ?? 'usr_' . $username,

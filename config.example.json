@@ -2,17 +2,17 @@
     "users": [
         {
             "id": "usr_admin",
-            "username": "admin",
-            "password_hash": "$2y$10$ztJ7oxcPBnKbkf/udxjEq.PPY8BiCrH2lAUgEDv.88BomUJg2Q1Ey",
+            "username": "Codespark",
+            "password_hash": "$2y$10$GnRll56CDzb1nXBU4mwrEOMaEwlr6pD.6XfjcIBwNkL15oMwW0M7m",
             "role": "admin",
             "name": "Codespark Admin"
         },
         {
             "id": "usr_manager",
-            "username": "manager",
-            "password_hash": "$2y$10$H8FAK2mw7GpD9t6eF/.InutYg/uec4rRK5ds2qE9jr0FZZVqasUgm",
+            "username": "seostaff",
+            "password_hash": "$2y$10$S1qdrRIwfR7bkKRXCZOqVuHZJdThrH3lrQ8j7.vGmWJFSGBxGsyFS",
             "role": "manager",
-            "name": "Operations Manager"
+            "name": "SEO Staff Manager"
         }
     ],
     "business": {
