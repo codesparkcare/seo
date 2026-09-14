@@ -2006,6 +2006,26 @@ function updateWpSecondaryImagePreview(url) {
     }
 }
 
+function quickSelectKeyword(keyword) {
+    const selectEl = document.getElementById('wpKeywordSelect');
+    if (!selectEl) return;
+    
+    let matched = false;
+    for (let i = 0; i < selectEl.options.length; i++) {
+        if (selectEl.options[i].value.trim().toLowerCase() === keyword.trim().toLowerCase()) {
+            selectEl.selectedIndex = i;
+            matched = true;
+            break;
+        }
+    }
+    if (!matched) {
+        const opt = new Option(keyword, keyword, true, true);
+        selectEl.add(opt);
+    }
+    onWpKeywordChange(keyword);
+    showToast(`Target keyword selected: "${keyword}"`, 'info');
+}
+
 function onWpKeywordChange(keyword) {
     if (!keyword) return;
     const titleEl = document.getElementById('postTitleInput');
@@ -2020,13 +2040,13 @@ function onWpKeywordChange(keyword) {
     // Auto-match Primary Featured Image
     const kw = keyword.toLowerCase();
     let img = 'https://images.unsplash.com/photo-1547658719-da2b51169166?w=1200&auto=format&fit=crop';
-    if (kw.includes('app') || kw.includes('mobile')) {
+    if (kw.includes('app') || kw.includes('mobile') || kw.includes('android') || kw.includes('ios') || kw.includes('play store') || kw.includes('console')) {
         img = 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=1200&auto=format&fit=crop';
-    } else if (kw.includes('intern') || kw.includes('training') || kw.includes('python')) {
+    } else if (kw.includes('intern') || kw.includes('training') || kw.includes('traning') || kw.includes('student')) {
         img = 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&auto=format&fit=crop';
     } else if (kw.includes('billing') || kw.includes('pos')) {
         img = 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=1200&auto=format&fit=crop';
-    } else if (kw.includes('cloud') || kw.includes('hosting')) {
+    } else if (kw.includes('cloud') || kw.includes('server') || kw.includes('hosting')) {
         img = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop';
     } else if (kw.includes('seo') || kw.includes('marketing')) {
         img = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop';
@@ -2035,36 +2055,39 @@ function onWpKeywordChange(keyword) {
 
     // Auto-match Secondary In-Content Image & Alt Text (Image 4 Style)
     let secImg = 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1000&auto=format&fit=crop';
-    let secAlt = `Professional ${keyword} in Tirunelveli | CodeSpark offers SEO, website development, and Android & iOS mobile app development services.`;
-    if (kw.includes('app') || kw.includes('mobile')) {
+    let secAlt = `Professional ${keyword} | CodeSpark offers SEO, website development, and Android & iOS mobile app development services.`;
+    if (kw.includes('app') || kw.includes('mobile') || kw.includes('android') || kw.includes('ios') || kw.includes('play store') || kw.includes('console')) {
         secImg = 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=1000&auto=format&fit=crop';
-        secAlt = 'Custom Mobile App Development in Tirunelveli | CodeSpark builds scalable iOS and Android applications.';
-    } else if (kw.includes('intern') || kw.includes('training') || kw.includes('python')) {
+        secAlt = `${keyword} | CodeSpark builds scalable iOS, Android and Play Store mobile applications.`;
+    } else if (kw.includes('intern') || kw.includes('training') || kw.includes('traning') || kw.includes('student')) {
         secImg = 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1000&auto=format&fit=crop';
-        secAlt = 'Professional Software Solutions & Internship in Tirunelveli | CodeSpark offers practical live project mentorship.';
+        secAlt = `${keyword} | CodeSpark offers practical live project software development mentorship for college students.`;
     } else if (kw.includes('billing') || kw.includes('pos')) {
         secImg = 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=1000&auto=format&fit=crop';
-        secAlt = 'GST Billing & POS Software in Tirunelveli | Fast barcode scanning, accounting and stock management by Codespark.';
-    } else if (kw.includes('cloud') || kw.includes('hosting')) {
+        secAlt = 'GST Billing & POS Software | Fast barcode scanning, accounting and stock management by Codespark.';
+    } else if (kw.includes('cloud') || kw.includes('server') || kw.includes('hosting')) {
         secImg = 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=1000&auto=format&fit=crop';
-        secAlt = 'Enterprise Cloud Hosting & Server Infrastructure in Tirunelveli | High speed 99.9% uptime by Codespark.';
+        secAlt = `${keyword} | Enterprise high-speed infrastructure, VPS and cloud server hosting by Codespark.`;
     } else if (kw.includes('seo') || kw.includes('marketing')) {
         secImg = 'https://images.unsplash.com/photo-1557838923-2985c318be48?w=1000&auto=format&fit=crop';
-        secAlt = 'Top Ranking SEO & Digital Marketing in Tirunelveli | Dominate Google 1st Page with Codespark.';
+        secAlt = `${keyword} | Dominate Google 1st Page & Local Maps with Codespark SEO Solutions.`;
+    } else if (kw.includes('web') || kw.includes('design') || kw.includes('developer') || kw.includes('site')) {
+        secImg = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1000&auto=format&fit=crop';
+        secAlt = `${keyword} | High performance modern responsive websites by Codespark.`;
     }
     setWpSecondaryImage(secImg, secAlt);
 
     // Auto-map Landing Page / Form URL
     let landingUrl = 'https://codespark.online/contact/';
-    if (kw.includes('web') || kw.includes('design') || kw.includes('site')) {
+    if (kw.includes('web') || kw.includes('design') || kw.includes('developer') || kw.includes('site')) {
         landingUrl = 'https://codespark.online/best-website-design-for-your-business/';
     } else if (kw.includes('bill') || kw.includes('pos')) {
         landingUrl = 'https://codespark.online/easy-billing-software/';
-    } else if (kw.includes('intern') || kw.includes('student') || kw.includes('python')) {
+    } else if (kw.includes('intern') || kw.includes('student') || kw.includes('training') || kw.includes('traning')) {
         landingUrl = 'https://codespark.online/internship-for-students/';
     } else if (kw.includes('seo') || kw.includes('market')) {
         landingUrl = 'https://codespark.online/digital-marketing-for-your-business/';
-    } else if (kw.includes('cloud') || kw.includes('hosting')) {
+    } else if (kw.includes('cloud') || kw.includes('server') || kw.includes('host')) {
         landingUrl = 'https://codespark.online/cloud-hosting-provider/';
     }
     const landingSelect = document.getElementById('wpLandingPageSelect');

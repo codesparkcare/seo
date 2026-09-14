@@ -79,7 +79,7 @@ function getCodesparkLandingPages() {
         [
             'title' => 'Website Design & Development',
             'url' => 'https://codespark.online/best-website-design-for-your-business/',
-            'keywords' => ['web', 'website', 'design', 'ecommerce', 'e-commerce', 'redesign']
+            'keywords' => ['web', 'website', 'design', 'desiner', 'designer', 'developer', 'development', 'ecommerce', 'e-commerce', 'redesign']
         ],
         [
             'title' => 'Easy Billing Software & POS',
@@ -89,27 +89,27 @@ function getCodesparkLandingPages() {
         [
             'title' => 'Software Internship for Students',
             'url' => 'https://codespark.online/internship-for-students/',
-            'keywords' => ['internship', 'student', 'college', 'training', 'python', 'full stack', 'intern', 'course']
+            'keywords' => ['internship', 'intership', 'student', 'college', 'training', 'traning', 'python', 'full stack', 'intern', 'course', 'online internship']
         ],
         [
             'title' => 'IT Career & Internship Program',
             'url' => 'https://codespark.online/internship/',
-            'keywords' => ['career', 'software internship', 'it company', 'institute', 'developer']
+            'keywords' => ['career', 'software internship', 'it company', 'institute', 'online internship']
         ],
         [
             'title' => 'Digital Marketing & SEO Services',
             'url' => 'https://codespark.online/digital-marketing-for-your-business/',
-            'keywords' => ['seo', 'marketing', 'digital marketing', 'google rank', 'local seo', 'social media', 'traffic']
+            'keywords' => ['seo', 'marketing', 'digital marketing', 'google rank', 'local seo', 'social media', 'traffic', 'codespark', 'no.1 seo']
         ],
         [
             'title' => 'High-Speed Cloud Hosting Provider',
             'url' => 'https://codespark.online/cloud-hosting-provider/',
-            'keywords' => ['cloud', 'hosting', 'server', 'vps', 'domain', 'web host']
+            'keywords' => ['cloud', 'hosting', 'server', 'vps', 'domain', 'web host', 'cloud server', 'free cloud']
         ],
         [
             'title' => 'Contact & Custom Software Inquiries',
             'url' => 'https://codespark.online/contact/',
-            'keywords' => ['app', 'mobile', 'android', 'ios', 'custom software', 'contact']
+            'keywords' => ['app', 'mobile', 'android', 'ios', 'play store', 'console', 'custom software', 'contact', 'near by', 'software company']
         ]
     ];
 }
@@ -132,28 +132,28 @@ function getCodesparkLandingPageForKeyword($kw) {
 // -------------------------------------------------------------
 function getAuthorityLinksForKeyword($kw) {
     $kwLower = strtolower($kw);
-    if (strpos($kwLower, 'app') !== false || strpos($kwLower, 'mobile') !== false || strpos($kwLower, 'android') !== false) {
+    if (strpos($kwLower, 'play store') !== false || strpos($kwLower, 'console') !== false || strpos($kwLower, 'ios') !== false || strpos($kwLower, 'android') !== false || strpos($kwLower, 'app') !== false || strpos($kwLower, 'mobile') !== false) {
         return [
-            ['title' => 'Official Android Developers Architecture Guidelines', 'url' => 'https://developer.android.com/topic/architecture'],
-            ['title' => 'W3C Mobile Web Application Best Practices', 'url' => 'https://www.w3.org/TR/mobile-bp/']
+            ['title' => 'Google Play Developer Console & Publishing Guidelines', 'url' => 'https://support.google.com/googleplay/android-developer/'],
+            ['title' => 'Official Android & iOS Native Mobile Architecture Guide', 'url' => 'https://developer.android.com/topic/architecture']
         ];
     }
-    if (strpos($kwLower, 'intern') !== false || strpos($kwLower, 'training') !== false || strpos($kwLower, 'python') !== false) {
+    if (strpos($kwLower, 'intern') !== false || strpos($kwLower, 'training') !== false || strpos($kwLower, 'traning') !== false || strpos($kwLower, 'student') !== false) {
         return [
-            ['title' => 'Python Software Foundation Official Documentation', 'url' => 'https://docs.python.org/3/'],
-            ['title' => 'Mozilla Developer Network (MDN) Engineering Curriculum', 'url' => 'https://developer.mozilla.org/']
+            ['title' => 'Python Software Foundation Official Engineering Curriculum', 'url' => 'https://docs.python.org/3/'],
+            ['title' => 'Mozilla Developer Network (MDN) Web & Software Curriculum', 'url' => 'https://developer.mozilla.org/']
+        ];
+    }
+    if (strpos($kwLower, 'cloud') !== false || strpos($kwLower, 'server') !== false || strpos($kwLower, 'host') !== false) {
+        return [
+            ['title' => 'Cloud Native Computing Foundation (CNCF) Infrastructure Guide', 'url' => 'https://www.cncf.io/'],
+            ['title' => 'W3C Cloud & Scalable Web Infrastructure Standards', 'url' => 'https://www.w3.org/standards/']
         ];
     }
     if (strpos($kwLower, 'bill') !== false || strpos($kwLower, 'pos') !== false) {
         return [
             ['title' => 'GST Official Portal Standards & E-Invoicing Guidelines', 'url' => 'https://www.gst.gov.in/'],
             ['title' => 'IEEE Software Engineering Standards for Point of Sale', 'url' => 'https://standards.ieee.org/']
-        ];
-    }
-    if (strpos($kwLower, 'cloud') !== false || strpos($kwLower, 'host') !== false) {
-        return [
-            ['title' => 'Cloud Native Computing Foundation (CNCF) Guidelines', 'url' => 'https://www.cncf.io/'],
-            ['title' => 'W3C Cloud & Scalable Web Standards', 'url' => 'https://www.w3.org/standards/']
         ];
     }
     if (strpos($kwLower, 'seo') !== false || strpos($kwLower, 'market') !== false) {
@@ -176,23 +176,26 @@ function getSecondaryImageForKeyword($kw, $metaTitle = '') {
     $cleanKw = trim(preg_replace('/\s+in\s+Tirunelveli$/i', '', $kw));
     
     $url = 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1000&auto=format&fit=crop';
-    $alt = "Professional {$cleanKw} in Tirunelveli | CodeSpark offers SEO, website development, and Android & iOS mobile app development services.";
+    $alt = "Professional {$cleanKw} | CodeSpark offers SEO, website development, and Android & iOS mobile app development services.";
     
-    if (strpos($kwLower, 'app') !== false || strpos($kwLower, 'mobile') !== false || strpos($kwLower, 'android') !== false) {
+    if (strpos($kwLower, 'play store') !== false || strpos($kwLower, 'console') !== false || strpos($kwLower, 'ios') !== false || strpos($kwLower, 'android') !== false || strpos($kwLower, 'app') !== false || strpos($kwLower, 'mobile') !== false) {
         $url = 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=1000&auto=format&fit=crop';
-        $alt = "Custom Mobile App Development in Tirunelveli | CodeSpark builds scalable iOS and Android applications.";
-    } elseif (strpos($kwLower, 'intern') !== false || strpos($kwLower, 'training') !== false || strpos($kwLower, 'python') !== false) {
+        $alt = "{$cleanKw} | CodeSpark builds scalable iOS, Android and Play Store mobile applications.";
+    } elseif (strpos($kwLower, 'intern') !== false || strpos($kwLower, 'training') !== false || strpos($kwLower, 'traning') !== false || strpos($kwLower, 'student') !== false) {
         $url = 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1000&auto=format&fit=crop';
-        $alt = "Professional Software Solutions & Internship in Tirunelveli | CodeSpark offers practical live project mentorship.";
+        $alt = "{$cleanKw} | CodeSpark offers hands-on live project software development mentorship for college students.";
+    } elseif (strpos($kwLower, 'cloud') !== false || strpos($kwLower, 'server') !== false || strpos($kwLower, 'host') !== false) {
+        $url = 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=1000&auto=format&fit=crop';
+        $alt = "{$cleanKw} | High speed 99.9% uptime, VPS and dedicated cloud server hosting by CodeSpark.";
     } elseif (strpos($kwLower, 'bill') !== false || strpos($kwLower, 'pos') !== false) {
         $url = 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?w=1000&auto=format&fit=crop';
-        $alt = "GST Billing & POS Software in Tirunelveli | Fast barcode scanning, accounting and stock management by Codespark.";
-    } elseif (strpos($kwLower, 'cloud') !== false || strpos($kwLower, 'host') !== false) {
-        $url = 'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=1000&auto=format&fit=crop';
-        $alt = "Enterprise Cloud Hosting & Server Infrastructure in Tirunelveli | High speed 99.9% uptime by Codespark.";
+        $alt = "GST Billing & POS Software | Fast barcode scanning, accounting and inventory management by CodeSpark.";
     } elseif (strpos($kwLower, 'seo') !== false || strpos($kwLower, 'market') !== false) {
         $url = 'https://images.unsplash.com/photo-1557838923-2985c318be48?w=1000&auto=format&fit=crop';
-        $alt = "Top Ranking SEO & Digital Marketing in Tirunelveli | Dominate Google 1st Page with Codespark.";
+        $alt = "{$cleanKw} | Dominate Google 1st Page & Local Maps with CodeSpark SEO Solutions.";
+    } elseif (strpos($kwLower, 'web') !== false || strpos($kwLower, 'desin') !== false || strpos($kwLower, 'design') !== false) {
+        $url = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1000&auto=format&fit=crop';
+        $alt = "{$cleanKw} | Modern responsive web design & high conversion development by CodeSpark.";
     }
     return ['url' => $url, 'alt' => $alt];
 }

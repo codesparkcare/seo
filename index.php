@@ -638,7 +638,7 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
 
                 <!-- Step 1: Select Target Keyword -->
                 <?php
-                $targetKeywordsRaw = $profile['target_keywords'] ?? 'Android App Development Company Tirunelveli, Near By App development company Tirunelveli, Internship Company Tirunelveli, IT company Tirunelveli, Software Company Tirunelveli, Best SEO Company Tirunelveli, Free Internship Company Tirunelveli, Web Development Company Tirunelveli, Billing Software Tirunelveli, Website Design Company Tirunelveli, Mobile App Developers in Tirunelveli, Custom Software Development Tirunelveli, Cloud Hosting Provider Tirunelveli, Digital Marketing Agency Tirunelveli, Best IT Solutions Tirunelveli, Software Training Institute Tirunelveli, Web Design Near Me Tirunelveli, E-commerce Website Development Tirunelveli, Top Software Internship Tirunelveli';
+                $targetKeywordsRaw = $profile['target_keywords'] ?? 'IT Company, Software Company, Website Designer, Website Developer, Internship Training, Free Internship For College Students, Free Cloud Server Provider, Free Internship Training, Free Hosting Provider, Cloud Server, Mobile App Development, Mobile App Developer, Android App Developer, iOS App Developer, Play Store Console Provider, Online Internship Software Development, Near by IT Company, Near by Software Company, SEO Company, SEO Codespark, No.1 SEO Company, Top website development company, Billing Software, Custom Software Development, Website Desiner, Intership Traning, SEO Comapny';
                 $targetKeywordsArr = array_values(array_filter(array_map('trim', explode(',', $targetKeywordsRaw))));
                 ?>
                 <div class="form-group" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(15, 23, 42, 0.6)); border: 1px solid rgba(59, 130, 246, 0.28); border-radius: 12px; padding: 16px 18px; margin-bottom: 20px;">
@@ -660,6 +660,29 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                         <button type="button" class="btn btn-primary" id="btnGenFullWpPost" onclick="generateFullWpPostFromKeyword()" style="padding: 10px 18px; font-size: 0.85rem; display:inline-flex; align-items:center; gap: 8px; white-space:nowrap; height: 42px;">
                             <i class="fas fa-magic"></i> Auto-Generate Post
                         </button>
+                    </div>
+
+                    <!-- Quick Focusing Keyword Badges -->
+                    <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                        <span style="font-size: 0.73rem; color: #94A3B8; font-weight: 600;"><i class="fas fa-fire" style="color: #f59e0b;"></i> Focusing Keywords:</span>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('IT Company')">IT Company</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('Software Company')">Software Company</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('Website Developer')">Website Developer</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('Website Designer')">Website Designer</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('Mobile App Development')">Mobile App Dev</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('Android App Developer')">Android App</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('iOS App Developer')">iOS App</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('Play Store Console Provider')">Play Store Console</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('Free Internship For College Students')">Free Internship</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('Internship Training')">Internship Training</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('Free Cloud Server Provider')">Free Cloud Server</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('Free Hosting Provider')">Free Hosting</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('Cloud Server')">Cloud Server</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('Near by IT Company')">Near by IT Company</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('SEO Company')">SEO Company</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('SEO Codespark')">SEO Codespark</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('No.1 SEO Company')">No.1 SEO Company</button>
+                        <button type="button" class="btn btn-outline btn-xs" onclick="quickSelectKeyword('Top website development company')">Top Web Dev</button>
                     </div>
                 </div>
 
@@ -1300,12 +1323,12 @@ At Codespark Software Development, we build high-performance mobile apps, digita
                 <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: var(--radius-sm); padding: 18px; margin: 18px 0;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
                         <h4 style="font-size: 0.95rem; color: #fff; display:flex; align-items:center; gap: 8px;">
-                            <i class="fas fa-crosshairs" style="color: var(--primary);"></i> 20 Primary Target SEO Keywords (Google Gemini AI Engine)
+                            <i class="fas fa-crosshairs" style="color: var(--primary);"></i> Focusing Target SEO Keywords (Google Gemini AI Engine)
                         </h4>
                         <span class="status-pill success"><i class="fas fa-robot"></i> Gemini Optimized</span>
                     </div>
                     <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
-                        Google Gemini Pro uses these exact 20 keywords to optimize your Google Maps review replies, geo-grid heatmap tracking, social posts, and WordPress local landing pages.
+                        Google Gemini Pro uses these exact focusing keywords to optimize your WordPress blog posts, Google Maps review replies, geo-grid heatmap tracking, and local landing pages.
                     </p>
                     <textarea class="form-control" id="profKeywords" rows="4" style="font-family: inherit; font-size: 0.88rem; line-height: 1.6;" placeholder="1. software company in tirunelveli, 2. web development company tirunelveli, 3. best website design tirunelveli..."><?= htmlspecialchars($profile['target_keywords'] ?? '') ?></textarea>
                     
