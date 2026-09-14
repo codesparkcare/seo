@@ -540,4 +540,52 @@ function renderRichPostContent($title, $content, $kw, $primaryImg = '', $seconda
     return $html;
 }
 
+// -------------------------------------------------------------
+// Resolve Unique SEO Slug with Meaningful Brand/Topic Letters (No Numbers Like -2)
+// -------------------------------------------------------------
+function resolveUniqueSlugWithoutNumbers($baseSlug, $user, $pass, $wpBase) {
+    $clean = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $baseSlug));
+    $clean = trim($clean, '-');
+    $clean = preg_replace('/-\d+$/', '', $clean); // Strip any existing numbers
+
+    // List of natural lettered modifiers to ensure uniqueness without numbers
+    $candidates = [
+        (strpos($clean, 'codespark') === false ? "{$clean}-codespark" : $clean),
+        $clean,
+        "{$clean}-solutions",
+        "{$clean}-services",
+        "{$clean}-tech",
+        "{$clean}-agency",
+        "{$clean}-team",
+        "{$clean}-hub",
+        "{$clean}-experts"
+    ];
+    $candidates = array_values(array_unique(array_filter($candidates)));
+
+    foreach ($candidates as $cand) {
+        // Check if candidate slug is already taken in WordPress posts or pages
+        $taken = false;
+        foreach (['posts', 'pages'] as $type) {
+            $checkUrl = "{$wpBase}/wp-json/wp/v2/{$type}?slug=" . urlencode($cand) . '&status=any';
+            $ch = curl_init($checkUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_USERPWD, "{$user}:{$pass}");
+            curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $items = json_decode(curl_exec($ch), true);
+            curl_close($ch);
+            if (!empty($items) && is_array($items) && count($items) > 0) {
+                $taken = true;
+                break;
+            }
+        }
+        if (!$taken) {
+            return $cand;
+        }
+    }
+
+    return $clean . '-online';
+}
+
+
 
