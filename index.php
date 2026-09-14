@@ -121,40 +121,6 @@ if (!$currentUser):
             font-size: 0.85rem;
             color: #94a3b8;
         }
-        .quick-role-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .role-chip {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            padding: 10px 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: left;
-        }
-        .role-chip:hover {
-            background: rgba(37, 99, 235, 0.15);
-            border-color: rgba(37, 99, 235, 0.4);
-            transform: translateY(-1px);
-        }
-        .role-chip.active {
-            background: rgba(37, 99, 235, 0.22);
-            border-color: #3b82f6;
-            box-shadow: 0 0 14px rgba(37, 99, 235, 0.35);
-        }
-        .role-chip strong {
-            display: block;
-            font-size: 0.88rem;
-            color: #fff;
-        }
-        .role-chip small {
-            font-size: 0.72rem;
-            color: #94a3b8;
-        }
         .input-group-custom {
             position: relative;
             margin-bottom: 18px;
@@ -247,7 +213,7 @@ if (!$currentUser):
 
         <div class="login-title">
             <h2>Command Center Login</h2>
-            <p>Select a user role or enter credentials to sign in</p>
+            <p>Please enter your credentials to sign in</p>
         </div>
 
         <?php if (!empty($loginError)): ?>
@@ -257,30 +223,18 @@ if (!$currentUser):
             </div>
         <?php endif; ?>
 
-        <!-- Quick 1-Click Role Switcher -->
-        <div class="quick-role-buttons">
-            <div class="role-chip active" id="chipAdmin" onclick="fillCredentials('admin', 'admin123')">
-                <strong>🛡️ Admin</strong>
-                <small>Full Access + Management</small>
-            </div>
-            <div class="role-chip" id="chipManager" onclick="fillCredentials('manager', 'manager123')">
-                <strong>👔 Manager</strong>
-                <small>Operations Only</small>
-            </div>
-        </div>
-
         <form method="POST" action="index.php" id="loginForm">
             <input type="hidden" name="login_action" value="1">
             
             <label style="display:block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">Username</label>
             <div class="input-group-custom">
-                <input type="text" name="username" id="loginUsername" value="admin" required autocomplete="username">
+                <input type="text" name="username" id="loginUsername" placeholder="Enter username" required autocomplete="username">
                 <i class="fas fa-user prefix-icon"></i>
             </div>
 
             <label style="display:block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">Password</label>
             <div class="input-group-custom">
-                <input type="password" name="password" id="loginPassword" value="admin123" required autocomplete="current-password">
+                <input type="password" name="password" id="loginPassword" placeholder="Enter password" required autocomplete="current-password">
                 <i class="fas fa-lock prefix-icon"></i>
                 <button type="button" class="toggle-pass" onclick="togglePasswordVisibility()" tabindex="-1">
                     <i class="fas fa-eye" id="togglePassIcon"></i>
@@ -300,13 +254,6 @@ if (!$currentUser):
 </div>
 
 <script>
-function fillCredentials(user, pass) {
-    document.getElementById('loginUsername').value = user;
-    document.getElementById('loginPassword').value = pass;
-    document.getElementById('chipAdmin').classList.toggle('active', user === 'admin');
-    document.getElementById('chipManager').classList.toggle('active', user === 'manager');
-}
-
 function togglePasswordVisibility() {
     const p = document.getElementById('loginPassword');
     const icon = document.getElementById('togglePassIcon');
