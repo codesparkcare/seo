@@ -47,7 +47,7 @@ switch ($action) {
     // ==========================================
     case 'gmb_login':
         $clientId = $config['google_oauth']['client_id'] ?? '';
-        $redirectUri = $config['google_oauth']['redirect_uri'] ?? 'http://localhost/SEO/api.php?action=gmb_callback';
+        $redirectUri = $config['google_oauth']['redirect_uri'] ?? 'https://codespark.online/seo/api.php?action=gmb_callback';
         
         if (empty($clientId)) {
             die('Google Client ID is missing in config.json');

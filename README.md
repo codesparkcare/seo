@@ -3,7 +3,7 @@
 **LocalRank Pro** is an automated Local SEO and Website SEO management software designed to help businesses dominate the **Google Map Top 3 Pack** and rank on **Page 1 of Google Search**.
 
 Installed and running directly inside your XAMPP environment at:
-👉 **[http://localhost/SEO](http://localhost/SEO)**
+👉 **[https://codespark.online/seo/](https://codespark.online/seo/)** (Local: `http://localhost/SEO`)
 
 ---
 

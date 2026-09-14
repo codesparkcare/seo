@@ -1743,7 +1743,7 @@ At Codespark Software Development, we build high-performance mobile apps, digita
                     <div class="form-group" style="margin-bottom: 14px;">
                         <label class="form-label">Authorized Redirect URI (Ensure this is in your Google Cloud Console)</label>
                         <div style="display:flex; gap: 8px;">
-                            <input type="text" class="form-control" id="settingRedirectUri" readonly value="<?= htmlspecialchars($googleOAuth['redirect_uri'] ?? 'http://localhost/SEO/api.php?action=gmb_callback') ?>" style="font-family: monospace; font-size: 0.82rem;">
+                            <input type="text" class="form-control" id="settingRedirectUri" readonly value="<?= htmlspecialchars($googleOAuth['redirect_uri'] ?? 'https://codespark.online/seo/api.php?action=gmb_callback') ?>" style="font-family: monospace; font-size: 0.82rem;">
                             <button class="btn btn-outline btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('settingRedirectUri').value); showToast('Redirect URI copied!');">
                                 <i class="fas fa-copy"></i> Copy
                             </button>
