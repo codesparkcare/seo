@@ -915,13 +915,19 @@ function renderProgrammaticPagesTable(pages) {
             <td><strong>${escapeHtml(p.title)}</strong></td>
             <td style="font-size: 0.8rem; color: var(--text-muted);">${escapeHtml(p.meta_description)}</td>
             <td><span class="status-pill primary">${escapeHtml(p.location)}</span></td>
-            <td style="display:flex; gap: 6px;">
+            <td style="display:flex; gap: 6px; align-items: center;">
                 <button class="btn btn-outline btn-sm" onclick="showLocalPageBlueprint(${idx})">
                     <i class="fas fa-eye"></i> Blueprint
                 </button>
-                <button class="btn btn-success btn-sm" onclick="publishPageToWordPress(${idx}, this)">
-                    <i class="fab fa-wordpress"></i> Publish to WP
-                </button>
+                ${p.liveLink ? `
+                    <a href="${p.liveLink}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm" style="color: #60a5fa; border-color: rgba(96,165,250,0.4); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <i class="fas fa-external-link-alt"></i> View Live
+                    </a>
+                ` : `
+                    <button class="btn btn-success btn-sm" onclick="publishPageToWordPress(${idx}, this)">
+                        <i class="fab fa-wordpress"></i> Publish to WP
+                    </button>
+                `}
             </td>
         </tr>
     `).join('');
@@ -930,12 +936,14 @@ function renderProgrammaticPagesTable(pages) {
 }
 
 async function publishPageToWordPress(index, btn) {
-    const page = window.generatedLocalPages[index];
+    const page = window.generatedLocalPages ? window.generatedLocalPages[index] : null;
     if (!page) return;
 
-    const origHtml = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publishing...';
+    const origHtml = btn ? btn.innerHTML : 'Publish to WP';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publishing...';
+    }
 
     const content = `
 <h2>${page.h1}</h2>
@@ -962,18 +970,38 @@ async function publishPageToWordPress(index, btn) {
         const data = await res.json();
         if (data.success) {
             showToast('Published live to codespark.online!', 'success');
-            btn.className = 'btn btn-outline btn-sm';
-            btn.innerHTML = `<i class="fas fa-external-link-alt"></i> View Live`;
-            btn.onclick = () => window.open(data.link, '_blank');
+            const liveUrl = data.link || `https://codespark.online/${page.slug.replace('/services/', '')}/`;
+            page.liveLink = liveUrl;
+
+            // Re-render button as real native clickable anchor link
+            if (btn) {
+                btn.disabled = false;
+                const a = document.createElement('a');
+                a.href = liveUrl;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                a.className = 'btn btn-outline btn-sm';
+                a.style.cssText = 'color: #60a5fa; border-color: rgba(96,165,250,0.4); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;';
+                a.innerHTML = `<i class="fas fa-external-link-alt"></i> View Live`;
+                if (btn.parentNode) {
+                    btn.parentNode.replaceChild(a, btn);
+                } else {
+                    btn.outerHTML = a.outerHTML;
+                }
+            }
         } else {
             showToast(data.error || 'Failed to publish to WordPress', 'error');
-            btn.disabled = false;
-            btn.innerHTML = origHtml;
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+            }
         }
     } catch (e) {
         showToast('Network error publishing to WordPress', 'error');
-        btn.disabled = false;
-        btn.innerHTML = origHtml;
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
     }
 }
 
@@ -2621,4 +2649,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tabParam) {
         switchTab(tabParam);
     }
+
+    // Global Delegate for any View Live Buttons
+    document.addEventListener('click', (e) => {
+        const target = e.target.closest('button');
+        if (target && target.textContent && target.textContent.includes('View Live')) {
+            const row = target.closest('tr');
+            if (row) {
+                const slugEl = row.querySelector('td strong');
+                if (slugEl && slugEl.textContent) {
+                    const slugText = slugEl.textContent.trim().replace('/services/', '').replace(/^\//, '');
+                    const targetUrl = `https://codespark.online/${slugText}/`;
+                    window.open(targetUrl, '_blank');
+                }
+            }
+        }
+    });
 });
