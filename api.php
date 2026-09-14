@@ -829,8 +829,52 @@ Return ONLY the clean HTML string without markdown fences.";
             $tags = array_values(array_unique(array_merge($tags, $taxMatch['tags'])));
         }
 
-        $endpoint = ($postType === 'page') ? '/wp-json/wp/v2/pages' : '/wp-json/wp/v2/posts';
-        $wpUrl = rtrim($config['settings']['wp_rest_url'] ?? 'https://codespark.online', '/') . $endpoint;
+        // 1. Check if a post already exists with this exact clean slug
+        $wpBase = rtrim($config['settings']['wp_rest_url'] ?? 'https://codespark.online', '/');
+        $findPostUrl = "{$wpBase}/wp-json/wp/v2/posts?slug=" . urlencode($cleanSlug) . '&status=any';
+        $ch = curl_init($findPostUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERPWD, "{$user}:{$pass}");
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $foundPosts = json_decode(curl_exec($ch), true);
+        curl_close($ch);
+
+        $existingPostId = null;
+        if (!empty($foundPosts) && is_array($foundPosts) && isset($foundPosts[0]['id'])) {
+            $existingPostId = $foundPosts[0]['id'];
+        }
+
+        // 2. Check if an old bare page is holding the clean slug
+        $findPageUrl = "{$wpBase}/wp-json/wp/v2/pages?slug=" . urlencode($cleanSlug) . '&status=any';
+        $ch = curl_init($findPageUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERPWD, "{$user}:{$pass}");
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $foundPages = json_decode(curl_exec($ch), true);
+        curl_close($ch);
+
+        if (!empty($foundPages) && is_array($foundPages)) {
+            foreach ($foundPages as $pg) {
+                if (!empty($pg['id'])) {
+                    $delPageUrl = "{$wpBase}/wp-json/wp/v2/pages/{$pg['id']}?force=true";
+                    $chD = curl_init($delPageUrl);
+                    curl_setopt($chD, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($chD, CURLOPT_CUSTOMREQUEST, 'DELETE');
+                    curl_setopt($chD, CURLOPT_USERPWD, "{$user}:{$pass}");
+                    curl_setopt($chD, CURLOPT_SSL_VERIFYPEER, false);
+                    curl_exec($chD);
+                    curl_close($chD);
+                }
+            }
+        }
+
+        // 3. Determine target endpoint: if post already exists, UPDATE it in-place to NEVER append -2!
+        if ($existingPostId) {
+            $wpUrl = "{$wpBase}/wp-json/wp/v2/posts/{$existingPostId}";
+        } else {
+            $endpoint = ($postType === 'page') ? '/wp-json/wp/v2/pages' : '/wp-json/wp/v2/posts';
+            $wpUrl = "{$wpBase}{$endpoint}";
+        }
 
         $postData = [
             'title' => $title,
@@ -867,6 +911,54 @@ Return ONLY the clean HTML string without markdown fences.";
 
         $result = json_decode($res, true);
         if ($code >= 200 && $code < 300 && !empty($result['link'])) {
+            $pubId = $result['id'] ?? $existingPostId;
+
+            // 4. If WordPress still appended a number suffix like -2, force it back to cleanSlug
+            if (!empty($result['slug']) && $result['slug'] !== $cleanSlug && preg_match('/-\d+$/', $result['slug']) && $pubId) {
+                $fixUrl = "{$wpBase}/wp-json/wp/v2/posts/{$pubId}";
+                $chFix = curl_init($fixUrl);
+                curl_setopt($chFix, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($chFix, CURLOPT_POST, true);
+                curl_setopt($chFix, CURLOPT_USERPWD, "{$user}:{$pass}");
+                curl_setopt($chFix, CURLOPT_POSTFIELDS, json_encode(['slug' => $cleanSlug]));
+                curl_setopt($chFix, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                curl_setopt($chFix, CURLOPT_SSL_VERIFYPEER, false);
+                $resFix = curl_exec($chFix);
+                curl_close($chFix);
+                $fixed = json_decode($resFix, true);
+                if (!empty($fixed['link'])) {
+                    $result['link'] = $fixed['link'];
+                }
+            }
+
+            // 5. Clean up any leftover duplicate posts/pages with -2, -3, -4 suffixes
+            foreach (['posts', 'pages'] as $taxType) {
+                for ($i = 2; $i <= 5; $i++) {
+                    $dupSlug = "{$cleanSlug}-{$i}";
+                    $dupUrl = "{$wpBase}/wp-json/wp/v2/{$taxType}?slug=" . urlencode($dupSlug) . '&status=any';
+                    $chDup = curl_init($dupUrl);
+                    curl_setopt($chDup, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($chDup, CURLOPT_USERPWD, "{$user}:{$pass}");
+                    curl_setopt($chDup, CURLOPT_SSL_VERIFYPEER, false);
+                    $dupItems = json_decode(curl_exec($chDup), true);
+                    curl_close($chDup);
+                    if (!empty($dupItems) && is_array($dupItems)) {
+                        foreach ($dupItems as $dItem) {
+                            if (!empty($dItem['id']) && $dItem['id'] != $pubId) {
+                                $delUrl = "{$wpBase}/wp-json/wp/v2/{$taxType}/" . $dItem['id'] . '?force=true';
+                                $chDel = curl_init($delUrl);
+                                curl_setopt($chDel, CURLOPT_RETURNTRANSFER, true);
+                                curl_setopt($chDel, CURLOPT_CUSTOMREQUEST, 'DELETE');
+                                curl_setopt($chDel, CURLOPT_USERPWD, "{$user}:{$pass}");
+                                curl_setopt($chDel, CURLOPT_SSL_VERIFYPEER, false);
+                                curl_exec($chDel);
+                                curl_close($chDel);
+                            }
+                        }
+                    }
+                }
+            }
+
             $wpLink = $result['link'];
 
             // Also record in publication history so it shows up in dashboard!
@@ -892,7 +984,7 @@ Return ONLY the clean HTML string without markdown fences.";
 
             jsonResponse([
                 'success' => true,
-                'message' => "Published live to codespark.online with rich layout, featured images, authority links, lead box & 20+ categories/tags!",
+                'message' => "Published live to codespark.online with clean URL (no -2 suffix), rich layout, images & 20+ taxonomies!",
                 'link' => $wpLink,
                 'title' => $title
             ]);
@@ -1087,10 +1179,36 @@ Return ONLY valid JSON.";
             $tags = array_values(array_unique(array_merge($tags, $taxMatch['tags'])));
         }
 
+        // Clean slug for chosen keyword
+        $cleanKwSlug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $chosenKw));
+        $cleanKwSlug = trim($cleanKwSlug, '-');
+
+        // Check if an existing post already exists for this keyword slug
+        $wpBase = rtrim($config['settings']['wp_rest_url'] ?? 'https://codespark.online', '/');
+        $findKwPostUrl = "{$wpBase}/wp-json/wp/v2/posts?slug=" . urlencode($cleanKwSlug) . '&status=any';
+        $ch = curl_init($findKwPostUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERPWD, "{$user}:{$pass}");
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $foundKwPosts = json_decode(curl_exec($ch), true);
+        curl_close($ch);
+
+        $existingKwPostId = null;
+        if (!empty($foundKwPosts) && is_array($foundKwPosts) && isset($foundKwPosts[0]['id'])) {
+            $existingKwPostId = $foundKwPosts[0]['id'];
+        }
+
+        if ($existingKwPostId) {
+            $wpUrl = "{$wpBase}/wp-json/wp/v2/posts/{$existingKwPostId}";
+        } else {
+            $wpUrl = "{$wpBase}/wp-json/wp/v2/posts";
+        }
+
         $wpPostData = [
             'title' => $metaTitle,
             'excerpt' => $metaDescription,
             'content' => $contentWithImage . $schemaScript,
+            'slug' => $cleanKwSlug,
             'status' => 'publish',
             'categories' => $categories,
             'tags' => $tags,
@@ -1117,6 +1235,52 @@ Return ONLY valid JSON.";
 
         $wpRes = json_decode($res, true);
         if ($code >= 200 && $code < 300 && !empty($wpRes['link'])) {
+            $pubKwId = $wpRes['id'] ?? $existingKwPostId;
+
+            // If WordPress appended a number suffix like -2, force it back to cleanKwSlug
+            if (!empty($wpRes['slug']) && $wpRes['slug'] !== $cleanKwSlug && preg_match('/-\d+$/', $wpRes['slug']) && $pubKwId) {
+                $fixUrl = "{$wpBase}/wp-json/wp/v2/posts/{$pubKwId}";
+                $chFix = curl_init($fixUrl);
+                curl_setopt($chFix, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($chFix, CURLOPT_POST, true);
+                curl_setopt($chFix, CURLOPT_USERPWD, "{$user}:{$pass}");
+                curl_setopt($chFix, CURLOPT_POSTFIELDS, json_encode(['slug' => $cleanKwSlug]));
+                curl_setopt($chFix, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                curl_setopt($chFix, CURLOPT_SSL_VERIFYPEER, false);
+                $resFix = curl_exec($chFix);
+                curl_close($chFix);
+                $fixed = json_decode($resFix, true);
+                if (!empty($fixed['link'])) {
+                    $wpRes['link'] = $fixed['link'];
+                }
+            }
+
+            // Clean up any leftover duplicate posts/pages with -2, -3, -4 suffixes
+            for ($i = 2; $i <= 5; $i++) {
+                $dupSlug = "{$cleanKwSlug}-{$i}";
+                $dupUrl = "{$wpBase}/wp-json/wp/v2/posts?slug=" . urlencode($dupSlug) . '&status=any';
+                $chDup = curl_init($dupUrl);
+                curl_setopt($chDup, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($chDup, CURLOPT_USERPWD, "{$user}:{$pass}");
+                curl_setopt($chDup, CURLOPT_SSL_VERIFYPEER, false);
+                $dupItems = json_decode(curl_exec($chDup), true);
+                curl_close($chDup);
+                if (!empty($dupItems) && is_array($dupItems)) {
+                    foreach ($dupItems as $dItem) {
+                        if (!empty($dItem['id']) && $dItem['id'] != $pubKwId) {
+                            $delUrl = "{$wpBase}/wp-json/wp/v2/posts/" . $dItem['id'] . '?force=true';
+                            $chDel = curl_init($delUrl);
+                            curl_setopt($chDel, CURLOPT_RETURNTRANSFER, true);
+                            curl_setopt($chDel, CURLOPT_CUSTOMREQUEST, 'DELETE');
+                            curl_setopt($chDel, CURLOPT_USERPWD, "{$user}:{$pass}");
+                            curl_setopt($chDel, CURLOPT_SSL_VERIFYPEER, false);
+                            curl_exec($chDel);
+                            curl_close($chDel);
+                        }
+                    }
+                }
+            }
+
             $wpLink = $wpRes['link'];
             $newPost = [
                 'title' => $metaTitle,
