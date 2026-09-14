@@ -1,4 +1,20 @@
 {
+    "users": [
+        {
+            "id": "usr_admin",
+            "username": "admin",
+            "password_hash": "$2y$10$ztJ7oxcPBnKbkf/udxjEq.PPY8BiCrH2lAUgEDv.88BomUJg2Q1Ey",
+            "role": "admin",
+            "name": "Codespark Admin"
+        },
+        {
+            "id": "usr_manager",
+            "username": "manager",
+            "password_hash": "$2y$10$H8FAK2mw7GpD9t6eF/.InutYg/uec4rRK5ds2qE9jr0FZZVqasUgm",
+            "role": "manager",
+            "name": "Operations Manager"
+        }
+    ],
     "business": {
         "name": "Codespark Software Development",
         "category": "Software Company & Web Development",

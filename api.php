@@ -5,6 +5,8 @@
  */
 require_once __DIR__ . '/config.php';
 
+startAuthSession();
+
 header('Content-Type: application/json; charset=utf-8');
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -15,6 +17,30 @@ $jsonBody = json_decode($rawInput, true) ?? [];
 $params = array_merge($_GET, $_POST, $jsonBody);
 
 switch ($action) {
+
+    // ==========================================
+    // 0. USER AUTHENTICATION & ACCESS CONTROL
+    // ==========================================
+    case 'login':
+        $username = $params['username'] ?? '';
+        $password = $params['password'] ?? '';
+        $auth = authenticateUser($username, $password);
+        if ($auth['success']) {
+            jsonResponse(['success' => true, 'user' => $auth['user']]);
+        } else {
+            jsonResponse(['success' => false, 'error' => $auth['error']], 401);
+        }
+        break;
+
+    case 'logout':
+        logoutUser();
+        jsonResponse(['success' => true, 'message' => 'Logged out successfully']);
+        break;
+
+    case 'get_current_user':
+        $user = getLoggedInUser();
+        jsonResponse(['success' => true, 'user' => $user]);
+        break;
 
     // ==========================================
     // 1. GOOGLE OAUTH: LOGIN & CALLBACK
@@ -130,6 +156,9 @@ switch ($action) {
         break;
 
     case 'save_profile':
+        if (!isAdmin()) {
+            jsonResponse(['error' => 'Access denied: Manager role cannot modify Business Profile or NAP settings.'], 403);
+        }
         $fields = ['name', 'category', 'address', 'city', 'state', 'zip', 'phone', 'website', 'latitude', 'longitude', 'google_place_id', 'google_profile_id', 'google_review_url', 'target_keywords'];
         foreach ($fields as $f) {
             if (isset($params[$f])) {
@@ -1915,10 +1944,16 @@ Output ONLY valid JSON with keys:
     // 11. SETTINGS SAVE (config.json)
     // ==========================================
     case 'get_settings':
+        if (!isAdmin()) {
+            jsonResponse(['error' => 'Access denied: Manager role cannot view system settings or API credentials.'], 403);
+        }
         jsonResponse(['success' => true, 'settings' => $config['settings'] ?? [], 'google_oauth' => $config['google_oauth'] ?? []]);
         break;
 
     case 'save_settings':
+        if (!isAdmin()) {
+            jsonResponse(['error' => 'Access denied: Manager role cannot modify system settings or API credentials.'], 403);
+        }
         if (!empty($params['client_id'])) $config['google_oauth']['client_id'] = trim($params['client_id']);
         if (!empty($params['client_secret'])) $config['google_oauth']['client_secret'] = trim($params['client_secret']);
         if (isset($params['openai_api_key'])) $config['settings']['openai_api_key'] = trim($params['openai_api_key']);

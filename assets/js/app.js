@@ -31,6 +31,9 @@ function showToast(message, type = 'success') {
 
 // Navigation & Tab Switching
 function switchTab(tabId) {
+    if (window.CURRENT_USER && window.CURRENT_USER.role === 'manager' && (tabId === 'profile' || tabId === 'settings')) {
+        tabId = 'overview';
+    }
     AppState.currentTab = tabId;
     
     // Update nav links
@@ -2784,7 +2787,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
     if (tabParam) {
-        switchTab(tabParam);
+        if (window.CURRENT_USER && window.CURRENT_USER.role === 'manager' && (tabParam === 'profile' || tabParam === 'settings')) {
+            switchTab('overview');
+        } else {
+            switchTab(tabParam);
+        }
     }
 
     // Global Delegate for any View Live Buttons

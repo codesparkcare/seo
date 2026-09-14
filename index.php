@@ -4,6 +4,327 @@
  */
 require_once __DIR__ . '/config.php';
 
+startAuthSession();
+
+// Handle Logout
+if (isset($_GET['logout'])) {
+    logoutUser();
+    header('Location: index.php');
+    exit;
+}
+
+// Handle Form POST Login
+$loginError = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_action'])) {
+    $username = trim($_POST['username'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+    $auth = authenticateUser($username, $password);
+    if ($auth['success']) {
+        header('Location: index.php');
+        exit;
+    } else {
+        $loginError = $auth['error'] ?? 'Invalid login credentials.';
+    }
+}
+
+$currentUser = getLoggedInUser();
+
+// If unauthenticated, render the Executive Dark Login Screen
+if (!$currentUser):
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codespark SEO Command Center - Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style.css?v=<?= time() ?>">
+    <style>
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 20px;
+            background: radial-gradient(circle at 50% 18%, rgba(37, 99, 235, 0.16) 0%, rgba(10, 14, 23, 1) 76%);
+            position: relative;
+            overflow: hidden;
+        }
+        .login-glow {
+            position: absolute;
+            width: 540px;
+            height: 540px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.22) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            top: -140px;
+            filter: blur(50px);
+        }
+        .login-card {
+            background: rgba(19, 29, 49, 0.9);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 440px;
+            padding: 40px 34px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75), 0 0 35px rgba(37, 99, 235, 0.15);
+            position: relative;
+            z-index: 10;
+        }
+        .login-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+            justify-content: center;
+        }
+        .login-brand-icon {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #fff;
+            box-shadow: 0 8px 22px rgba(37, 99, 235, 0.45);
+        }
+        .login-brand-text h1 {
+            font-size: 1.55rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+        }
+        .login-brand-text span {
+            font-size: 0.76rem;
+            color: #38bdf8;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .login-title {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+        .login-title h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #f8fafc;
+            margin-bottom: 6px;
+        }
+        .login-title p {
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        .quick-role-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .role-chip {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+        .role-chip:hover {
+            background: rgba(37, 99, 235, 0.15);
+            border-color: rgba(37, 99, 235, 0.4);
+            transform: translateY(-1px);
+        }
+        .role-chip.active {
+            background: rgba(37, 99, 235, 0.22);
+            border-color: #3b82f6;
+            box-shadow: 0 0 14px rgba(37, 99, 235, 0.35);
+        }
+        .role-chip strong {
+            display: block;
+            font-size: 0.88rem;
+            color: #fff;
+        }
+        .role-chip small {
+            font-size: 0.72rem;
+            color: #94a3b8;
+        }
+        .input-group-custom {
+            position: relative;
+            margin-bottom: 18px;
+        }
+        .input-group-custom i.prefix-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+        .input-group-custom input {
+            width: 100%;
+            background: rgba(10, 14, 24, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            padding: 12px 42px 12px 42px;
+            font-size: 0.95rem;
+            color: #f8fafc;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .input-group-custom input:focus {
+            border-color: #3b82f6;
+            background: rgba(13, 20, 36, 0.95);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+        .input-group-custom .toggle-pass {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 4px;
+        }
+        .input-group-custom .toggle-pass:hover {
+            color: #cbd5e1;
+        }
+        .btn-login-submit {
+            width: 100%;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 13px;
+            font-size: 0.98rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .btn-login-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.55);
+            filter: brightness(1.08);
+        }
+        .login-footer-info {
+            margin-top: 22px;
+            text-align: center;
+            font-size: 0.78rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+<div class="login-wrapper">
+    <div class="login-glow"></div>
+    <div class="login-card">
+        <div class="login-brand">
+            <div class="login-brand-icon">
+                <i class="fas fa-satellite-dish"></i>
+            </div>
+            <div class="login-brand-text">
+                <h1>Codespark</h1>
+                <span>LocalRank Pro</span>
+            </div>
+        </div>
+
+        <div class="login-title">
+            <h2>Command Center Login</h2>
+            <p>Select a user role or enter credentials to sign in</p>
+        </div>
+
+        <?php if (!empty($loginError)): ?>
+            <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #fca5a5; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span><?= htmlspecialchars($loginError) ?></span>
+            </div>
+        <?php endif; ?>
+
+        <!-- Quick 1-Click Role Switcher -->
+        <div class="quick-role-buttons">
+            <div class="role-chip active" id="chipAdmin" onclick="fillCredentials('admin', 'admin123')">
+                <strong>🛡️ Admin</strong>
+                <small>Full Access + Management</small>
+            </div>
+            <div class="role-chip" id="chipManager" onclick="fillCredentials('manager', 'manager123')">
+                <strong>👔 Manager</strong>
+                <small>Operations Only</small>
+            </div>
+        </div>
+
+        <form method="POST" action="index.php" id="loginForm">
+            <input type="hidden" name="login_action" value="1">
+            
+            <label style="display:block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">Username</label>
+            <div class="input-group-custom">
+                <input type="text" name="username" id="loginUsername" value="admin" required autocomplete="username">
+                <i class="fas fa-user prefix-icon"></i>
+            </div>
+
+            <label style="display:block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">Password</label>
+            <div class="input-group-custom">
+                <input type="password" name="password" id="loginPassword" value="admin123" required autocomplete="current-password">
+                <i class="fas fa-lock prefix-icon"></i>
+                <button type="button" class="toggle-pass" onclick="togglePasswordVisibility()" tabindex="-1">
+                    <i class="fas fa-eye" id="togglePassIcon"></i>
+                </button>
+            </div>
+
+            <button type="submit" class="btn-login-submit" id="btnLoginSubmit">
+                <i class="fas fa-sign-in-alt"></i> Sign In to Dashboard
+            </button>
+        </form>
+
+        <div class="login-footer-info">
+            🔒 Role-Based Authorized Access • LocalRank Pro
+            <div style="margin-top: 4px; color: #475569;">Codespark Software Development • Tirunelveli</div>
+        </div>
+    </div>
+</div>
+
+<script>
+function fillCredentials(user, pass) {
+    document.getElementById('loginUsername').value = user;
+    document.getElementById('loginPassword').value = pass;
+    document.getElementById('chipAdmin').classList.toggle('active', user === 'admin');
+    document.getElementById('chipManager').classList.toggle('active', user === 'manager');
+}
+
+function togglePasswordVisibility() {
+    const p = document.getElementById('loginPassword');
+    const icon = document.getElementById('togglePassIcon');
+    if (p.type === 'password') {
+        p.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        p.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+</script>
+</body>
+</html>
+<?php 
+exit; 
+endif; 
+
 $config = loadConfig();
 $profile = $config['business'] ?? [];
 $googleOAuth = $config['google_oauth'] ?? [];
@@ -72,6 +393,7 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
             </li>
         </ul>
 
+        <?php if (($currentUser['role'] ?? '') === 'admin'): ?>
         <div class="nav-section-title">Management</div>
         <ul class="nav-links">
             <li class="nav-item" data-tab="profile">
@@ -83,6 +405,7 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                 <span>Connect & Automate</span>
             </li>
         </ul>
+        <?php endif; ?>
 
         <div class="sidebar-footer">
             <div class="connection-status">
@@ -104,13 +427,25 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                 <h2><span class="biz-name-display"><?= htmlspecialchars($profile['name'] ?? 'Codespark Software Development') ?></span></h2>
                 <p><i class="fas fa-map-marker-alt" style="color: var(--secondary);"></i> <span class="biz-address-display"><?= htmlspecialchars($profile['address'] ?? '') ?></span> • Top 3 Map Pack Optimization</p>
             </div>
-            <div class="top-actions">
+            <div class="top-actions" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <button class="btn btn-outline btn-sm" onclick="triggerCronRun()">
                     <i class="fas fa-sync"></i> Run Automations Now
                 </button>
                 <button class="btn btn-primary btn-sm" onclick="switchTab('geo-grid')">
                     <i class="fas fa-crosshairs"></i> Launch Geo-Grid
                 </button>
+                <div class="user-pill" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 20px;">
+                    <div style="width: 24px; height: 24px; border-radius: 50%; background: <?= ($currentUser['role'] ?? '') === 'admin' ? '#8b5cf6' : '#0ea5e9' ?>; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff;">
+                        <?= strtoupper(substr($currentUser['username'] ?? 'U', 0, 1)) ?>
+                    </div>
+                    <span style="font-size: 0.85rem; font-weight: 600; color: #f8fafc;"><?= htmlspecialchars($currentUser['name'] ?? 'User') ?></span>
+                    <span class="badge" style="font-size: 0.72rem; padding: 2px 8px; border-radius: 10px; background: <?= ($currentUser['role'] ?? '') === 'admin' ? 'rgba(139, 92, 246, 0.25); color: #c4b5fd; border: 1px solid rgba(139,92,246,0.4);' : 'rgba(14, 165, 233, 0.25); color: #7dd3fc; border: 1px solid rgba(14,165,233,0.4);' ?>">
+                        <?= ($currentUser['role'] ?? '') === 'admin' ? '🛡️ Admin' : '👔 Manager' ?>
+                    </span>
+                    <a href="index.php?logout=1" class="btn btn-outline btn-sm" style="padding: 3px 8px; font-size: 0.75rem; margin-left: 4px; border-color: rgba(239,68,68,0.35); color: #f87171; text-decoration: none;" title="Sign out">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
             </div>
         </header>
 
@@ -1299,6 +1634,7 @@ At Codespark Software Development, we build high-performance mobile apps, digita
             </div>
         </section>
 
+        <?php if (($currentUser['role'] ?? '') === 'admin'): ?>
         <!-- ==========================================
              TAB 6: BUSINESS PROFILE & NAP
              ========================================== -->
@@ -1541,6 +1877,7 @@ At Codespark Software Development, we build high-performance mobile apps, digita
                 </div>
             </div>
         </section>
+        <?php endif; ?>
 
     </main>
 </div>
@@ -1783,6 +2120,9 @@ At Codespark Software Development, we build high-performance mobile apps, digita
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <!-- App JavaScript Controller -->
+<script>
+window.CURRENT_USER = <?= json_encode($currentUser) ?>;
+</script>
 <script src="assets/js/app.js?v=<?= time() ?>"></script>
 
 </body>
