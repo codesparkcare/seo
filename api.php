@@ -837,6 +837,9 @@ Return ONLY the clean HTML string without markdown fences.";
         $endpoint = ($postType === 'page') ? '/wp-json/wp/v2/pages' : '/wp-json/wp/v2/posts';
         $wpUrl = "{$wpBase}{$endpoint}";
 
+        // Upload and attach native WordPress Featured Media ID so it displays above blog title on /blog/ archive
+        $featuredMediaId = uploadOrGetFeaturedMediaId($imageUrl, $title, $user, $pass, $wpBase);
+
         $postData = [
             'title' => $title,
             'excerpt' => $metaDescription,
@@ -844,6 +847,9 @@ Return ONLY the clean HTML string without markdown fences.";
             'slug' => $uniqueSlug,
             'status' => 'publish'
         ];
+        if ($featuredMediaId > 0) {
+            $postData['featured_media'] = $featuredMediaId;
+        }
 
         // Attach categories, tags & SEO meta for posts
         if ($postType !== 'page') {
@@ -1119,6 +1125,9 @@ Return ONLY valid JSON.";
 
         $wpUrl = "{$wpBase}/wp-json/wp/v2/posts";
 
+        // Upload and attach native WordPress Featured Media ID so it displays above blog title on /blog/ archive
+        $featuredMediaId = uploadOrGetFeaturedMediaId($imageUrl, $metaTitle, $user, $pass, $wpBase);
+
         $wpPostData = [
             'title' => $metaTitle,
             'excerpt' => $metaDescription,
@@ -1136,6 +1145,9 @@ Return ONLY valid JSON.";
                 '_yoast_wpseo_focuskw' => $chosenKw
             ]
         ];
+        if ($featuredMediaId > 0) {
+            $wpPostData['featured_media'] = $featuredMediaId;
+        }
 
         $ch = curl_init($wpUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);

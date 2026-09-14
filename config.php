@@ -587,5 +587,48 @@ function resolveUniqueSlugWithoutNumbers($baseSlug, $user, $pass, $wpBase) {
     return $clean . '-online';
 }
 
+// -------------------------------------------------------------
+// Upload or Retrieve WordPress Featured Media ID
+// -------------------------------------------------------------
+function uploadOrGetFeaturedMediaId($imageUrl, $title, $user, $pass, $wpBase) {
+    if (empty($imageUrl)) {
+        return 0;
+    }
 
+    $sanitized = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $title));
+    $sanitized = trim(substr($sanitized, 0, 40), '-');
+    $filename = (!empty($sanitized) ? $sanitized : 'codespark-featured') . '.jpg';
 
+    // Download image data
+    $ch = curl_init($imageUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    $imgData = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if (empty($imgData) || $httpCode < 200 || $httpCode >= 300) {
+        return 0;
+    }
+
+    // Upload to WordPress REST API
+    $uploadUrl = "{$wpBase}/wp-json/wp/v2/media";
+    $ch = curl_init($uploadUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_USERPWD, "{$user}:{$pass}");
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $imgData);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "Content-Disposition: attachment; filename=\"{$filename}\"",
+        "Content-Type: image/jpeg"
+    ]);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 12);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    $res = curl_exec($ch);
+    curl_close($ch);
+
+    $data = json_decode($res, true);
+    return intval($data['id'] ?? 0);
+}
