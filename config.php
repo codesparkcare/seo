@@ -201,6 +201,27 @@ function getSecondaryImageForKeyword($kw, $metaTitle = '') {
 }
 
 // -------------------------------------------------------------
+// Primary Hero / Featured Image for Keyword
+// -------------------------------------------------------------
+function getPrimaryImageForKeyword($kw) {
+    $kwLower = strtolower($kw);
+    if (strpos($kwLower, 'play store') !== false || strpos($kwLower, 'console') !== false || strpos($kwLower, 'ios') !== false || strpos($kwLower, 'android') !== false || strpos($kwLower, 'app') !== false || strpos($kwLower, 'mobile') !== false) {
+        return 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=1200&auto=format&fit=crop';
+    } elseif (strpos($kwLower, 'intern') !== false || strpos($kwLower, 'training') !== false || strpos($kwLower, 'traning') !== false || strpos($kwLower, 'student') !== false || strpos($kwLower, 'python') !== false) {
+        return 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&auto=format&fit=crop';
+    } elseif (strpos($kwLower, 'bill') !== false || strpos($kwLower, 'pos') !== false || strpos($kwLower, 'finance') !== false) {
+        return 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=1200&auto=format&fit=crop';
+    } elseif (strpos($kwLower, 'cloud') !== false || strpos($kwLower, 'server') !== false || strpos($kwLower, 'host') !== false) {
+        return 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop';
+    } elseif (strpos($kwLower, 'seo') !== false || strpos($kwLower, 'rank') !== false || strpos($kwLower, 'market') !== false) {
+        return 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop';
+    } elseif (strpos($kwLower, 'web') !== false || strpos($kwLower, 'desin') !== false || strpos($kwLower, 'design') !== false) {
+        return 'https://images.unsplash.com/photo-1547658719-da2b51169166?w=1200&auto=format&fit=crop';
+    }
+    return 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=1200&auto=format&fit=crop';
+}
+
+// -------------------------------------------------------------
 // Auto-Match WordPress Categories & Tags from Cached JSON
 // -------------------------------------------------------------
 function getMatchingTaxonomiesForKeyword($kw, $targetCount = 20) {
@@ -287,7 +308,7 @@ function getMatchingTaxonomiesForKeyword($kw, $targetCount = 20) {
 // -------------------------------------------------------------
 // High-Converting Lead Generation Card Builder
 // -------------------------------------------------------------
-function buildLeadMagnetBox($title, $landingUrl, $ctaLabel, $kw) {
+function buildLeadMagnetBox($title, $landingUrl, $ctaLabel, $kw, $location = '') {
     $encodedTitle = urlencode("Hello Codespark! I am inquiring regarding: " . $title);
     $waUrl = "https://wa.me/918110899000?text={$encodedTitle}";
     $telUrl = "tel:+918110899000";
@@ -406,8 +427,9 @@ function buildLeadMagnetBox($title, $landingUrl, $ctaLabel, $kw) {
     $html .= "    <h3 style='margin: 0 0 10px 0; color: #ffffff; font-size: 1.45rem; font-weight: 800; line-height: 1.35; display: flex; align-items: center;'>\n";
     $html .= "      <span class='cs-rocket-icon'>🚀</span> Ready to Elevate Your Business with Codespark?\n";
     $html .= "    </h3>\n";
+    $locDisplay = !empty($location) ? htmlspecialchars($location) : "Tirunelveli";
     $html .= "    <p style='margin: 0 0 20px 0; color: #cbd5e1; font-size: 1.02rem; line-height: 1.65; max-width: 720px;'>\n";
-    $html .= "      Partner with Tirunelveli's premier software engineering and digital growth team. Get a <strong>Free Strategy Consultation & Live Demo</strong> tailored specifically for your business or career goals!\n";
+    $html .= "      Partner with {$locDisplay}'s premier software engineering and digital growth team. Get a <strong>Free Strategy Consultation & Live Demo</strong> tailored specifically for your business or career goals!\n";
     $html .= "    </p>\n";
     $html .= "    <!-- Animated Action Buttons -->\n";
     $html .= "    <div style='display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 18px;'>\n";
@@ -441,7 +463,10 @@ function buildLeadMagnetBox($title, $landingUrl, $ctaLabel, $kw) {
 // -------------------------------------------------------------
 // Complete Rich HTML Article Builder (Heading + Images + Authority + Lead)
 // -------------------------------------------------------------
-function renderRichPostContent($title, $content, $kw, $primaryImg = '', $secondaryImg = '', $secondaryAlt = '', $ctaUrl = '', $ctaType = 'LEARN_MORE') {
+function renderRichPostContent($title, $content, $kw, $primaryImg = '', $secondaryImg = '', $secondaryAlt = '', $ctaUrl = '', $ctaType = 'LEARN_MORE', $location = '') {
+    if (empty($primaryImg)) {
+        $primaryImg = getPrimaryImageForKeyword($kw);
+    }
     // 1. Prominent H1 Title at top (Guarantees headline shows on codespark.online single post template)
     $cleanTitle = htmlspecialchars($title);
     $html = "<h1 class='wp-post-main-heading' style='font-size: 2.15rem; font-weight: 800; color: #0f172a; margin: 16px 0 24px 0; line-height: 1.35; letter-spacing: -0.02em;'>{$cleanTitle}</h1>\n\n";
@@ -510,7 +535,7 @@ function renderRichPostContent($title, $content, $kw, $primaryImg = '', $seconda
     
     // 7. 100% Lead Magnet Conversion Box (WhatsApp + Phone + Office)
     $ctaLabel = ($ctaType === 'CALL') ? 'Call Our Team' : (($ctaType === 'BOOK') ? 'Book Consultation' : 'Apply / Inquire Now');
-    $html .= buildLeadMagnetBox($title, $landingUrl, $ctaLabel, $kw);
+    $html .= buildLeadMagnetBox($title, $landingUrl, $ctaLabel, $kw, $location);
     
     return $html;
 }

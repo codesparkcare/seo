@@ -942,38 +942,32 @@ async function publishPageToWordPress(index, btn) {
     const origHtml = btn ? btn.innerHTML : 'Publish to WP';
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publishing...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publishing (Rich Post)...';
     }
-
-    const content = `
-<h2>${page.h1}</h2>
-<p>${page.meta_description}</p>
-<div style="background:#f8fafc; border-left:4px solid #3b82f6; padding:16px; margin:20px 0; border-radius:4px;">
-    <h3 style="margin-top:0; color:#1e3a8a;">Professional ${page.service} Serving ${page.location}</h3>
-    <p>Codespark Technology provides enterprise-grade, high-performance technology services in <strong>${page.location}</strong> and across Tamil Nadu. Contact our dedicated solutions team today at +91 81108 99000.</p>
-</div>
-<h3>Frequently Asked Questions</h3>
-<p><strong>${page.faqs[0].q}</strong></p>
-<p>${page.faqs[0].a}</p>
-    `.trim();
 
     try {
         const res = await fetch('api.php?action=publish_to_wordpress', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                service: page.service,
+                location: page.location,
                 title: page.title,
-                content: content,
-                slug: page.slug.replace('/services/', '')
+                meta_description: page.meta_description,
+                slug: page.slug.replace('/services/', ''),
+                h1: page.h1,
+                faqs: page.faqs,
+                image_url: page.image_url || '',
+                post_type: 'post'
             })
         });
         const data = await res.json();
         if (data.success) {
-            showToast('Published live to codespark.online!', 'success');
+            showToast('Published live to codespark.online with rich layout, images & 20+ taxonomies!', 'success');
             const liveUrl = data.link || `https://codespark.online/${page.slug.replace('/services/', '')}/`;
             page.liveLink = liveUrl;
 
-            // Re-render button as real native clickable anchor link
+            // Re-render table button as real native clickable anchor link
             if (btn) {
                 btn.disabled = false;
                 const a = document.createElement('a');
@@ -988,6 +982,20 @@ async function publishPageToWordPress(index, btn) {
                 } else {
                     btn.outerHTML = a.outerHTML;
                 }
+            }
+
+            // Also update modal button if open
+            const modalBtn = document.getElementById('btnModalPublishWp');
+            if (modalBtn) {
+                modalBtn.className = 'btn btn-outline';
+                modalBtn.style.cssText = 'color: #60a5fa; border-color: rgba(96,165,250,0.4); display: inline-flex; align-items: center; gap: 6px; text-decoration: none;';
+                modalBtn.innerHTML = `<i class="fas fa-external-link-alt"></i> View Live Post`;
+                modalBtn.onclick = () => window.open(liveUrl, '_blank');
+            }
+
+            // Refresh post publication history in tab if function exists
+            if (typeof loadPosts === 'function') {
+                loadPosts();
             }
         } else {
             showToast(data.error || 'Failed to publish to WordPress', 'error');
@@ -1068,6 +1076,23 @@ function clearLocations() {
     }
 }
 
+// Helper to preview primary featured image based on service
+function getPrimaryImagePreview(service) {
+    const s = (service || '').toLowerCase();
+    if (s.includes('app') || s.includes('mobile') || s.includes('android') || s.includes('ios') || s.includes('play store') || s.includes('console')) {
+        return 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=1200&auto=format&fit=crop';
+    } else if (s.includes('intern') || s.includes('training') || s.includes('traning') || s.includes('student')) {
+        return 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&auto=format&fit=crop';
+    } else if (s.includes('billing') || s.includes('pos')) {
+        return 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=1200&auto=format&fit=crop';
+    } else if (s.includes('cloud') || s.includes('server') || s.includes('hosting')) {
+        return 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop';
+    } else if (s.includes('seo') || s.includes('marketing')) {
+        return 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1200&auto=format&fit=crop';
+    }
+    return 'https://images.unsplash.com/photo-1547658719-da2b51169166?w=1200&auto=format&fit=crop';
+}
+
 // Blueprint Modal Handlers
 let currentActiveBlueprintIndex = null;
 
@@ -1080,17 +1105,27 @@ function showLocalPageBlueprint(index) {
     if (!modal) return;
 
     document.getElementById('blueprintModalTitle').textContent = `${page.service} in ${page.location}`;
-    document.getElementById('blueprintModalLocality').textContent = `Target Locality: ${page.location}`;
+    document.getElementById('blueprintModalLocality').textContent = `Target Locality: ${page.location} · Rich Auto-Post Format`;
     document.getElementById('blueprintModalSlug').textContent = page.slug;
     document.getElementById('blueprintModalSeoTitle').textContent = page.title;
     document.getElementById('blueprintModalMetaDesc').textContent = page.meta_description;
     
+    const heroImg = page.image_url || getPrimaryImagePreview(page.service);
     document.getElementById('blueprintModalBody').innerHTML = `
-        <h4 style="margin:0 0 6px 0; color:#fff;">&lt;h1&gt; ${escapeHtml(page.h1)} &lt;/h1&gt;</h4>
-        <p style="margin:0 0 10px 0;">${escapeHtml(page.meta_description)}</p>
-        <div style="background:rgba(255,255,255,0.05); padding:8px 10px; border-radius:4px; margin-bottom:8px;">
-            <strong style="color:var(--secondary); font-size:0.8rem;">FAQ: ${escapeHtml(page.faqs[0].q)}</strong>
-            <p style="margin:4px 0 0 0; font-size:0.78rem;">${escapeHtml(page.faqs[0].a)}</p>
+        <div style="margin-bottom: 12px; border-radius: 8px; overflow: hidden; max-height: 160px; border: 1px solid var(--border-color);">
+            <img src="${heroImg}" alt="${escapeHtml(page.title)}" style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px; display: block;">
+        </div>
+        <div style="display:flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;">
+            <span class="status-pill success" style="font-size: 0.72rem;"><i class="fas fa-check-circle"></i> 20+ Categories Synced</span>
+            <span class="status-pill success" style="font-size: 0.72rem;"><i class="fas fa-tag"></i> 20+ Tags Synced</span>
+            <span class="status-pill primary" style="font-size: 0.72rem;"><i class="fas fa-link"></i> 2+ Authority Links</span>
+            <span class="status-pill primary" style="font-size: 0.72rem;"><i class="fab fa-whatsapp"></i> Animated Lead Magnet</span>
+        </div>
+        <h4 style="margin:0 0 6px 0; color:#fff;">&lt;h1&gt; ${escapeHtml(page.h1 || page.title)} &lt;/h1&gt;</h4>
+        <p style="margin:0 0 10px 0; color: #cbd5e1; font-size: 0.84rem; line-height: 1.5;">${escapeHtml(page.meta_description)}</p>
+        <div style="background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:6px; margin-bottom:8px; border-left: 3px solid #3b82f6;">
+            <strong style="color:var(--secondary); font-size:0.82rem;">FAQ: ${escapeHtml(page.faqs && page.faqs[0] ? page.faqs[0].q : 'Why choose Codespark?')}</strong>
+            <p style="margin:4px 0 0 0; font-size:0.78rem; color:#94a3b8;">${escapeHtml(page.faqs && page.faqs[0] ? page.faqs[0].a : 'Leading software engineering in Tamil Nadu.')}</p>
         </div>
     `;
 
@@ -1111,6 +1146,21 @@ function showLocalPageBlueprint(index) {
         "description": page.meta_description
     };
     document.getElementById('blueprintModalSchema').textContent = JSON.stringify(schemaObj, null, 2);
+
+    const modalBtn = document.getElementById('btnModalPublishWp');
+    if (modalBtn) {
+        if (page.liveLink) {
+            modalBtn.className = 'btn btn-outline';
+            modalBtn.style.cssText = 'color: #60a5fa; border-color: rgba(96,165,250,0.4); display: inline-flex; align-items: center; gap: 6px; text-decoration: none;';
+            modalBtn.innerHTML = `<i class="fas fa-external-link-alt"></i> View Live Post`;
+            modalBtn.onclick = () => window.open(page.liveLink, '_blank');
+        } else {
+            modalBtn.className = 'btn btn-success';
+            modalBtn.style.cssText = '';
+            modalBtn.innerHTML = `<i class="fab fa-wordpress"></i> Publish to WordPress (Rich Post Format)`;
+            modalBtn.onclick = publishModalBlueprintToWp;
+        }
+    }
 
     modal.style.display = 'flex';
 }

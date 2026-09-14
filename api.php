@@ -655,6 +655,7 @@ switch ($action) {
                     'title' => "Top #1 {$srv} in {$loc} | {$biz['name']}",
                     'meta_description' => "Looking for trusted {$srv} in {$loc}? {$biz['name']} provides top-tier technology solutions. Call {$biz['phone']}.",
                     'h1' => "Best {$srv} in {$loc}",
+                    'image_url' => getPrimaryImageForKeyword($srv),
                     'faqs' => [
                         ['q' => "Why choose {$biz['name']} for {$srv} in {$loc}?", 'a' => "We are based locally with proven track records, fast delivery, and 24/7 technical support."]
                     ]
@@ -666,24 +667,192 @@ switch ($action) {
         break;
 
     case 'publish_to_wordpress':
-        $wpUrl = rtrim($config['settings']['wp_rest_url'] ?? 'https://codespark.online', '/') . '/wp-json/wp/v2/pages';
         $user = $config['settings']['wp_rest_username'] ?? 'Codespark';
         $pass = $config['settings']['wp_rest_app_password'] ?? '';
 
+        if (empty($pass)) {
+            jsonResponse(['error' => 'WordPress REST Application Password is not configured in Settings.'], 400);
+        }
+
+        $service = trim($params['service'] ?? '');
+        $location = trim($params['location'] ?? '');
         $title = trim($params['title'] ?? '');
-        $content = trim($params['content'] ?? '');
         $slug = trim($params['slug'] ?? '');
+        $metaDescription = trim($params['meta_description'] ?? '');
+        $postType = trim($params['post_type'] ?? 'post'); // 'post' ensures WP single post template with sidebar, 20 categories & 20 tags like Auto Generate - Publish Post
+
+        // Extract service and location if missing
+        if (empty($service) || empty($location)) {
+            if (preg_match('/^(?:Top\s+#?1?\s*)?(.*?)\s+in\s+([^\|–—]+)/i', $title, $m)) {
+                if (empty($service)) $service = trim($m[1]);
+                if (empty($location)) $location = trim($m[2]);
+            }
+        }
+        if (empty($service)) $service = 'IT Company';
+        if (empty($location)) $location = 'Chennai';
+
+        $bizName = $config['business']['name'] ?? 'Codespark Software Development';
+        $city = !empty($location) ? $location : ($config['business']['city'] ?? 'Tirunelveli');
+        $phone = $config['business']['phone'] ?? '+91 81108 99000';
+        $address = ($config['business']['address'] ?? '') . ', ' . ($config['business']['city'] ?? '') . ' - ' . ($config['business']['zip'] ?? '');
+        $website = $config['business']['website'] ?? 'https://codespark.online/';
 
         if (empty($title)) {
-            jsonResponse(['error' => 'Page title is required.'], 400);
+            $title = "Top #1 {$service} in {$location} | {$bizName}";
         }
+        if (empty($metaDescription)) {
+            $metaDescription = "Looking for trusted {$service} in {$location}? {$bizName} provides top-tier technology solutions, mobile apps & custom software. Call {$phone}.";
+        }
+
+        // Clean slug
+        $cleanSlug = !empty($slug) ? preg_replace('/^\/?(services\/)?/', '', $slug) : strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', "{$service}-in-{$location}"));
+        $cleanSlug = trim($cleanSlug, '-');
+
+        // Check if content is already rich formatted or if we should generate complete rich article
+        $rawContent = trim($params['content'] ?? '');
+        $isAlreadyRich = (strpos($rawContent, 'cs-lead-magnet-wrapper') !== false || strpos($rawContent, 'wp-post-main-heading') !== false);
+
+        if (!$isAlreadyRich) {
+            // Generate full-length, high-intent local SEO article content
+            $faq1Q = "Why choose {$bizName} for {$service} in {$location}?";
+            $faq1A = "{$bizName} is a top-rated technology agency delivering fast, high-performance, and custom-tailored solutions for clients in {$location} with dedicated ongoing technical support.";
+            $faq2Q = "How do I get started or book a project consultation?";
+            $faq2A = "You can call us directly at {$phone} or connect with our engineering team via WhatsApp for a direct roadmap and free project demo.";
+
+            if (!empty($params['faqs']) && is_array($params['faqs'])) {
+                if (!empty($params['faqs'][0]['q'])) $faq1Q = $params['faqs'][0]['q'];
+                if (!empty($params['faqs'][0]['a'])) $faq1A = $params['faqs'][0]['a'];
+                if (!empty($params['faqs'][1]['q'])) $faq2Q = $params['faqs'][1]['q'];
+                if (!empty($params['faqs'][1]['a'])) $faq2A = $params['faqs'][1]['a'];
+            }
+
+            $articleBody = "<h2>Leading " . htmlspecialchars($service) . " in " . htmlspecialchars($location) . " – {$bizName}</h2>\n" .
+                "<p>Looking for the premier <strong>" . htmlspecialchars($service) . " in " . htmlspecialchars($location) . "</strong>? <strong>{$bizName}</strong> provides enterprise-grade, custom-built software, mobile applications, and high-performance digital solutions engineered to scale your business in {$location} and across Tamil Nadu.</p>\n" .
+                "<h3>Why Choose {$bizName} for " . htmlspecialchars($service) . " in " . htmlspecialchars($location) . "?</h3>\n" .
+                "<ul>\n" .
+                "<li><strong>Tailored Digital Solutions:</strong> We design custom mobile apps, billing software, and web platforms perfectly aligned with your business workflow.</li>\n" .
+                "<li><strong>Cutting-Edge Tech Stack:</strong> High speed, secure database architecture, and responsive designs engineered to rank on Google Page 1.</li>\n" .
+                "<li><strong>Dedicated Regional Support:</strong> Prompt consultation and 24/7 technical support for organizations, businesses, and startups in {$location}.</li>\n" .
+                "<li><strong>End-to-End Delivery:</strong> From initial architecture and UI/UX design to cloud deployment and ongoing maintenance.</li>\n" .
+                "</ul>\n" .
+                "<h3>Enterprise Features & Core Capabilities</h3>\n" .
+                "<p>At <strong>{$bizName}</strong>, our engineers build resilient, scalable architectures that support rapid business expansion. Whether you require custom Android and iOS applications, robust cloud infrastructure, or localized search visibility, our team ensures maximum uptime, security, and exceptional user experience across all devices.</p>\n" .
+                "<h3>Frequently Asked Questions</h3>\n" .
+                "<p><strong>Q: " . htmlspecialchars($faq1Q) . "</strong><br>A: " . htmlspecialchars($faq1A) . "</p>\n" .
+                "<p><strong>Q: " . htmlspecialchars($faq2Q) . "</strong><br>A: " . htmlspecialchars($faq2A) . "</p>\n" .
+                "<div style=\"padding: 18px; background: #f8fafc; border-left: 4px solid #6366f1; margin-top: 24px; border-radius: 6px;\">\n" .
+                "<h4>Professional {$service} Serving " . htmlspecialchars($location) . "</h4>\n" .
+                "<p>📍 <strong>Regional Office:</strong> {$address}<br>\n" .
+                "📞 <strong>Direct Phone:</strong> {$phone}<br>\n" .
+                "🌐 <strong>Official Website:</strong> <a href=\"{$website}\">{$website}</a></p>\n" .
+                "</div>";
+
+            // If Gemini API Key is configured, optionally enrich
+            $geminiKey = $config['settings']['gemini_api_key'] ?? '';
+            if (!empty($geminiKey) && strpos($geminiKey, 'AIzaSy') === 0) {
+                $prompt = "You are an elite SEO copywriter for Codespark Software Development (+91 81108 99000, https://codespark.online).
+Write a 350-word local landing page article for '{$service}' in '{$location}', Tamil Nadu.
+Include <h2>, <h3>, benefit bullet points, localized FAQs, and a contact callout.
+Return ONLY the clean HTML string without markdown fences.";
+                $geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" . urlencode($geminiKey);
+                $ch = curl_init($geminiUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['contents' => [['parts' => [['text' => $prompt]]]]]));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 8);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                $res = curl_exec($ch);
+                curl_close($ch);
+                $gData = json_decode($res, true);
+                $aiText = $gData['candidates'][0]['content']['parts'][0]['text'] ?? '';
+                if (!empty($aiText) && strlen($aiText) > 100) {
+                    $aiText = preg_replace('/^```(?:html)?\s*/i', '', trim($aiText));
+                    $aiText = preg_replace('/```$/i', '', trim($aiText));
+                    $articleBody = $aiText;
+                }
+            }
+
+            // Hero image & secondary image
+            $imageUrl = trim($params['image_url'] ?? getPrimaryImageForKeyword($service));
+            $secImg = getSecondaryImageForKeyword($service, $title);
+            $secondaryUrl = trim($params['secondary_image_url'] ?? $secImg['url']);
+            $secondaryAlt = trim($params['secondary_image_alt'] ?? $secImg['alt']);
+            $landingUrl = trim($params['cta_url'] ?? getCodesparkLandingPageForKeyword($service));
+
+            // Render full rich content with H1, Hero Image, Content, Secondary Image, Contextual link, Authority links & Animated Lead Magnet
+            $finalContent = renderRichPostContent(
+                $title,
+                $articleBody,
+                $service,
+                $imageUrl,
+                $secondaryUrl,
+                $secondaryAlt,
+                $landingUrl,
+                'LEARN_MORE',
+                $location
+            );
+        } else {
+            $finalContent = $rawContent;
+            $imageUrl = trim($params['image_url'] ?? getPrimaryImageForKeyword($service));
+            $articleBody = $rawContent;
+        }
+
+        // Schema JSON-LD
+        $schemaData = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Service',
+            'name' => "{$service} in {$location}",
+            'serviceType' => $service,
+            'provider' => [
+                '@type' => 'LocalBusiness',
+                'name' => $bizName,
+                'telephone' => $phone,
+                'url' => $website
+            ],
+            'areaServed' => [
+                '@type' => 'City',
+                'name' => $location
+            ],
+            'description' => $metaDescription
+        ];
+        $schemaScript = "\n\n<!-- Local SEO Schema Injected by LocalRank Pro -->\n<script type=\"application/ld+json\">\n" . json_encode($schemaData, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) . "\n</script>";
+
+        // Fetch 20+ Categories and 20+ Tags
+        $taxMatch = getMatchingTaxonomiesForKeyword($service, 20);
+        $categories = !empty($params['categories']) && is_array($params['categories']) ? array_map('intval', $params['categories']) : [];
+        if (count($categories) < 20) {
+            $categories = array_values(array_unique(array_merge($categories, $taxMatch['categories'])));
+        }
+        $tags = !empty($params['tags']) && is_array($params['tags']) ? array_map('intval', $params['tags']) : [];
+        if (count($tags) < 20) {
+            $tags = array_values(array_unique(array_merge($tags, $taxMatch['tags'])));
+        }
+
+        $endpoint = ($postType === 'page') ? '/wp-json/wp/v2/pages' : '/wp-json/wp/v2/posts';
+        $wpUrl = rtrim($config['settings']['wp_rest_url'] ?? 'https://codespark.online', '/') . $endpoint;
 
         $postData = [
             'title' => $title,
-            'content' => $content,
-            'slug' => $slug,
+            'excerpt' => $metaDescription,
+            'content' => $finalContent . $schemaScript,
+            'slug' => $cleanSlug,
             'status' => 'publish'
         ];
+
+        // Attach categories, tags & SEO meta for posts
+        if ($postType !== 'page') {
+            $postData['categories'] = $categories;
+            $postData['tags'] = $tags;
+            $postData['meta'] = [
+                'rank_math_title' => $title,
+                'rank_math_description' => $metaDescription,
+                'rank_math_focus_keyword' => "{$service} in {$location}",
+                '_yoast_wpseo_title' => $title,
+                '_yoast_wpseo_metadesc' => $metaDescription,
+                '_yoast_wpseo_focuskw' => "{$service} in {$location}"
+            ];
+        }
 
         $ch = curl_init($wpUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -698,7 +867,35 @@ switch ($action) {
 
         $result = json_decode($res, true);
         if ($code >= 200 && $code < 300 && !empty($result['link'])) {
-            jsonResponse(['success' => true, 'message' => 'Page published to WordPress live!', 'link' => $result['link']]);
+            $wpLink = $result['link'];
+
+            // Also record in publication history so it shows up in dashboard!
+            $newPostRecord = [
+                'title' => $title,
+                'meta_title' => $title,
+                'meta_description' => $metaDescription,
+                'meta_keywords' => "{$service}, {$service} {$location}, Best {$service} in {$location}, {$bizName}",
+                'content' => strip_tags(substr($articleBody, 0, 220)) . '...',
+                'image_url' => $imageUrl,
+                'platforms' => ['wordpress'],
+                'cta_type' => 'LEARN_MORE',
+                'cta_url' => $wpLink,
+                'scheduled_for' => date('Y-m-d H:i'),
+                'status' => 'published',
+                'wp_link' => $wpLink,
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            if (!isset($config['posts'])) $config['posts'] = [];
+            array_unshift($config['posts'], $newPostRecord);
+            $config['posts'] = array_slice($config['posts'], 0, 30);
+            saveConfig($config);
+
+            jsonResponse([
+                'success' => true,
+                'message' => "Published live to codespark.online with rich layout, featured images, authority links, lead box & 20+ categories/tags!",
+                'link' => $wpLink,
+                'title' => $title
+            ]);
         } else {
             $err = $result['message'] ?? 'Failed to publish to WordPress';
             jsonResponse(['error' => $err], 400);
