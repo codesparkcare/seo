@@ -203,56 +203,84 @@ function getSecondaryImageForKeyword($kw, $metaTitle = '') {
 // -------------------------------------------------------------
 // Auto-Match WordPress Categories & Tags from Cached JSON
 // -------------------------------------------------------------
-function getMatchingTaxonomiesForKeyword($kw) {
+function getMatchingTaxonomiesForKeyword($kw, $targetCount = 20) {
     $taxFile = APP_ROOT . '/wp_taxonomies.json';
     if (!file_exists($taxFile)) {
         return ['categories' => [], 'tags' => []];
     }
     $tax = json_decode(file_get_contents($taxFile), true) ?: [];
     $kwLower = strtolower($kw);
+    $words = array_filter(explode(' ', preg_replace('/[^a-z0-9 ]/i', ' ', $kwLower)), function($w){ return strlen($w) > 2; });
     
+    // Core keyword associations for broader topical cluster matching
+    $extraTerms = ['software', 'development', 'it company', 'company', 'web', 'app', 'tirunelveli', 'codespark', 'solutions'];
+    if (strpos($kwLower, 'intern') !== false || strpos($kwLower, 'train') !== false || strpos($kwLower, 'traning') !== false || strpos($kwLower, 'student') !== false) {
+        $extraTerms = array_merge($extraTerms, ['internship', 'training', 'college', 'student', 'career', 'education', 'project']);
+    }
+    if (strpos($kwLower, 'cloud') !== false || strpos($kwLower, 'host') !== false || strpos($kwLower, 'server') !== false) {
+        $extraTerms = array_merge($extraTerms, ['cloud', 'server', 'hosting', 'infrastructure', 'network', 'online']);
+    }
+    if (strpos($kwLower, 'app') !== false || strpos($kwLower, 'mobile') !== false || strpos($kwLower, 'android') !== false || strpos($kwLower, 'ios') !== false || strpos($kwLower, 'console') !== false) {
+        $extraTerms = array_merge($extraTerms, ['mobile', 'android', 'application', 'ios', 'play store', 'console']);
+    }
+    if (strpos($kwLower, 'seo') !== false || strpos($kwLower, 'market') !== false) {
+        $extraTerms = array_merge($extraTerms, ['seo', 'marketing', 'digital marketing', 'analytics', 'presence', 'online']);
+    }
+    if (strpos($kwLower, 'bill') !== false || strpos($kwLower, 'pos') !== false) {
+        $extraTerms = array_merge($extraTerms, ['billing', 'pos', 'accounting', 'invoice', 'gst', 'enterprise']);
+    }
+
+    $allSearchTerms = array_unique(array_merge($words, $extraTerms));
+
+    // 1. MATCH CATEGORIES (Guarantee at least 20)
     $catIds = [];
-    $tagIds = [];
-    
     foreach ($tax['categories'] ?? [] as $c) {
         $cn = strtolower($c['name']);
-        if (strpos($kwLower, 'intern') !== false && (strpos($cn, 'intern') !== false || strpos($cn, 'training') !== false)) {
-            $catIds[] = (int)$c['id'];
-        } elseif ((strpos($kwLower, 'app') !== false || strpos($kwLower, 'mobile') !== false) && (strpos($cn, 'app') !== false || strpos($cn, 'android') !== false)) {
-            $catIds[] = (int)$c['id'];
-        } elseif ((strpos($kwLower, 'bill') !== false || strpos($kwLower, 'pos') !== false) && strpos($cn, 'bill') !== false) {
-            $catIds[] = (int)$c['id'];
-        } elseif ((strpos($kwLower, 'web') !== false || strpos($kwLower, 'design') !== false) && (strpos($cn, 'web') !== false || strpos($cn, 'e-commerce') !== false)) {
-            $catIds[] = (int)$c['id'];
-        } elseif ((strpos($kwLower, 'seo') !== false || strpos($kwLower, 'market') !== false) && (strpos($cn, 'seo') !== false || strpos($cn, 'market') !== false)) {
-            $catIds[] = (int)$c['id'];
-        }
-    }
-    
-    if (empty($catIds)) {
-        foreach ($tax['categories'] ?? [] as $c) {
-            $cn = strtolower($c['name']);
-            if ($cn === 'an it company' || $cn === 'business it solutions' || $cn === 'seo') {
+        foreach ($allSearchTerms as $term) {
+            if (strpos($cn, $term) !== false) {
                 $catIds[] = (int)$c['id'];
-                if (count($catIds) >= 2) break;
+                break;
             }
         }
     }
-    
-    foreach ($tax['tags'] ?? [] as $t) {
-        $tn = strtolower($t['name']);
-        if (strpos($kwLower, 'bill') !== false && strpos($tn, 'accounting') !== false) {
-            $tagIds[] = (int)$t['id'];
-            if (count($tagIds) >= 3) break;
-        } elseif (strpos($tn, 'software') !== false || strpos($tn, 'website') !== false) {
-            $tagIds[] = (int)$t['id'];
-            if (count($tagIds) >= 3) break;
+    if (count($catIds) < $targetCount) {
+        $sortedCats = $tax['categories'] ?? [];
+        usort($sortedCats, function($a, $b){ return ($b['count'] ?? 0) - ($a['count'] ?? 0); });
+        foreach ($sortedCats as $c) {
+            if (!in_array((int)$c['id'], $catIds)) {
+                $catIds[] = (int)$c['id'];
+                if (count($catIds) >= $targetCount) break;
+            }
         }
     }
-    
+
+    // 2. MATCH TAGS (Guarantee at least 20)
+    $tagIds = [];
+    foreach ($tax['tags'] ?? [] as $t) {
+        $tn = strtolower($t['name']);
+        foreach ($allSearchTerms as $term) {
+            if (strpos($tn, $term) !== false) {
+                $tagIds[] = (int)$t['id'];
+                break;
+            }
+        }
+    }
+    if (count($tagIds) < $targetCount) {
+        $sortedTags = $tax['tags'] ?? [];
+        usort($sortedTags, function($a, $b){ return ($b['count'] ?? 0) - ($a['count'] ?? 0); });
+        foreach ($sortedTags as $t) {
+            if (!in_array((int)$t['id'], $tagIds)) {
+                $tagIds[] = (int)$t['id'];
+                if (count($tagIds) >= $targetCount) break;
+            }
+        }
+    }
+
+    $finalLimit = max($targetCount, min(25, max(count($catIds), count($tagIds))));
+
     return [
-        'categories' => array_values(array_unique(array_slice($catIds, 0, 5))),
-        'tags' => array_values(array_unique(array_slice($tagIds, 0, 5)))
+        'categories' => array_values(array_unique(array_slice($catIds, 0, max($targetCount, min(25, count($catIds)))))),
+        'tags' => array_values(array_unique(array_slice($tagIds, 0, max($targetCount, min(25, count($tagIds))))))
     ];
 }
 

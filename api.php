@@ -880,9 +880,15 @@ Return ONLY valid JSON.";
             jsonResponse(['error' => 'WordPress REST Application Password is not configured in Settings.'], 400);
         }
 
-        $taxMatch = getMatchingTaxonomiesForKeyword($chosenKw);
-        $categories = !empty($params['categories']) && is_array($params['categories']) ? array_map('intval', $params['categories']) : $taxMatch['categories'];
-        $tags = !empty($params['tags']) && is_array($params['tags']) ? array_map('intval', $params['tags']) : $taxMatch['tags'];
+        $taxMatch = getMatchingTaxonomiesForKeyword($chosenKw, 20);
+        $categories = !empty($params['categories']) && is_array($params['categories']) ? array_map('intval', $params['categories']) : [];
+        if (count($categories) < 20) {
+            $categories = array_values(array_unique(array_merge($categories, $taxMatch['categories'])));
+        }
+        $tags = !empty($params['tags']) && is_array($params['tags']) ? array_map('intval', $params['tags']) : [];
+        if (count($tags) < 20) {
+            $tags = array_values(array_unique(array_merge($tags, $taxMatch['tags'])));
+        }
 
         $wpPostData = [
             'title' => $metaTitle,
@@ -1525,9 +1531,15 @@ Output ONLY valid JSON with keys:
                 }
 
                 $landingUrl = trim($params['cta_url'] ?? getCodesparkLandingPageForKeyword($metaKeywords ?: $title));
-                $taxMatch = getMatchingTaxonomiesForKeyword($metaKeywords ?: $title);
-                $categories = !empty($params['categories']) && is_array($params['categories']) ? array_map('intval', $params['categories']) : $taxMatch['categories'];
-                $tags = !empty($params['tags']) && is_array($params['tags']) ? array_map('intval', $params['tags']) : $taxMatch['tags'];
+                $taxMatch = getMatchingTaxonomiesForKeyword($metaKeywords ?: $title, 20);
+                $categories = !empty($params['categories']) && is_array($params['categories']) ? array_map('intval', $params['categories']) : [];
+                if (count($categories) < 20) {
+                    $categories = array_values(array_unique(array_merge($categories, $taxMatch['categories'])));
+                }
+                $tags = !empty($params['tags']) && is_array($params['tags']) ? array_map('intval', $params['tags']) : [];
+                if (count($tags) < 20) {
+                    $tags = array_values(array_unique(array_merge($tags, $taxMatch['tags'])));
+                }
 
                 // Guarantees prominent H1 Heading, featured & secondary images with alt, authority links & lead card
                 $postBody = renderRichPostContent(

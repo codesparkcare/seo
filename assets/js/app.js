@@ -1956,31 +1956,127 @@ async function syncWpTaxonomies(force = false) {
                     wpAllTags.map(t => `<option value="${t.id}">${t.name} (${t.count} posts)</option>`).join('');
             }
 
-            // If no categories selected yet, pick top 2 defaults
-            if (wpSelectedCategoryIds.length === 0 && wpAllCategories.length > 0) {
-                const defaultCats = wpAllCategories.filter(c => {
-                    const n = c.name.toLowerCase();
-                    return n.includes('it company') || n.includes('software') || n.includes('solutions') || n.includes('seo');
-                }).slice(0, 2);
-                wpSelectedCategoryIds = defaultCats.map(c => c.id);
-            }
+            // Auto-select at least 20 categories and 20 tags based on currently selected keyword
+            const activeKw = document.getElementById('wpKeywordSelect')?.value || 'Online Internship Software Development';
+            selectTaxonomiesForKeyword(activeKw, 20);
 
-            renderSelectedCategories();
-            renderSelectedTags();
-
-            if (force) showToast('Synced categories and tags live with codespark.online!', 'success');
+            if (force) showToast('Synced 100 categories and 100 tags live with codespark.online!', 'success');
         }
     } catch (e) {
         console.error('Taxonomy sync error', e);
     }
 }
 
+function selectTaxonomiesForKeyword(keyword, targetCount = 20) {
+    if (!wpAllCategories || wpAllCategories.length === 0) return;
+    const kwLower = (keyword || '').toLowerCase();
+    const words = kwLower.replace(/[^a-z0-9 ]/gi, ' ').split(' ').filter(w => w.length > 2);
+    
+    let extraTerms = ['software', 'development', 'it company', 'company', 'web', 'app', 'tirunelveli', 'codespark', 'solutions'];
+    if (kwLower.includes('intern') || kwLower.includes('train') || kwLower.includes('traning') || kwLower.includes('student')) {
+        extraTerms = extraTerms.concat(['internship', 'training', 'college', 'student', 'career', 'education', 'project']);
+    }
+    if (kwLower.includes('cloud') || kwLower.includes('host') || kwLower.includes('server')) {
+        extraTerms = extraTerms.concat(['cloud', 'server', 'hosting', 'infrastructure', 'network', 'online']);
+    }
+    if (kwLower.includes('app') || kwLower.includes('mobile') || kwLower.includes('android') || kwLower.includes('ios') || kwLower.includes('console')) {
+        extraTerms = extraTerms.concat(['mobile', 'android', 'application', 'ios', 'play store', 'console']);
+    }
+    if (kwLower.includes('seo') || kwLower.includes('market')) {
+        extraTerms = extraTerms.concat(['seo', 'marketing', 'digital marketing', 'analytics', 'presence', 'online']);
+    }
+    if (kwLower.includes('bill') || kwLower.includes('pos')) {
+        extraTerms = extraTerms.concat(['billing', 'pos', 'accounting', 'invoice', 'gst', 'enterprise']);
+    }
+    const allSearchTerms = Array.from(new Set(words.concat(extraTerms)));
+
+    // 1. Pick Categories (At least 20)
+    let cats = [];
+    wpAllCategories.forEach(c => {
+        const cn = (c.name || '').toLowerCase();
+        for (const term of allSearchTerms) {
+            if (cn.includes(term)) {
+                cats.push(c.id);
+                break;
+            }
+        }
+    });
+    if (cats.length < targetCount) {
+        const sortedCats = [...wpAllCategories].sort((a, b) => (b.count || 0) - (a.count || 0));
+        for (const c of sortedCats) {
+            if (!cats.includes(c.id)) {
+                cats.push(c.id);
+                if (cats.length >= targetCount) break;
+            }
+        }
+    }
+    wpSelectedCategoryIds = Array.from(new Set(cats)).slice(0, Math.max(targetCount, Math.min(25, cats.length)));
+
+    // 2. Pick Tags (At least 20)
+    let tags = [];
+    wpAllTags.forEach(t => {
+        const tn = (t.name || '').toLowerCase();
+        for (const term of allSearchTerms) {
+            if (tn.includes(term)) {
+                tags.push(t.id);
+                break;
+            }
+        }
+    });
+    if (tags.length < targetCount) {
+        const sortedTags = [...wpAllTags].sort((a, b) => (b.count || 0) - (a.count || 0));
+        for (const t of sortedTags) {
+            if (!tags.includes(t.id)) {
+                tags.push(t.id);
+                if (tags.length >= targetCount) break;
+            }
+        }
+    }
+    wpSelectedTagIds = Array.from(new Set(tags)).slice(0, Math.max(targetCount, Math.min(25, tags.length)));
+
+    renderSelectedCategories();
+    renderSelectedTags();
+}
+
+function selectTopCategories(targetCount = 20) {
+    if (!wpAllCategories || wpAllCategories.length === 0) return;
+    const sorted = [...wpAllCategories].sort((a, b) => (b.count || 0) - (a.count || 0));
+    wpSelectedCategoryIds = sorted.slice(0, targetCount).map(c => c.id);
+    renderSelectedCategories();
+    showToast(`Selected top ${wpSelectedCategoryIds.length} categories`, 'info');
+}
+
+function clearAllCategories() {
+    wpSelectedCategoryIds = [];
+    renderSelectedCategories();
+    showToast('Categories cleared', 'info');
+}
+
+function selectTopTags(targetCount = 20) {
+    if (!wpAllTags || wpAllTags.length === 0) return;
+    const sorted = [...wpAllTags].sort((a, b) => (b.count || 0) - (a.count || 0));
+    wpSelectedTagIds = sorted.slice(0, targetCount).map(t => t.id);
+    renderSelectedTags();
+    showToast(`Selected top ${wpSelectedTagIds.length} tags`, 'info');
+}
+
+function clearAllTags() {
+    wpSelectedTagIds = [];
+    renderSelectedTags();
+    showToast('Tags cleared', 'info');
+}
+
 function renderSelectedCategories() {
     const container = document.getElementById('wpSelectedCategoriesContainer');
+    const badge = document.getElementById('wpCategoryCountBadge');
+    if (badge) {
+        badge.textContent = `${wpSelectedCategoryIds.length} Selected`;
+        badge.className = wpSelectedCategoryIds.length >= 20 ? 'status-pill success' : 'status-pill primary';
+    }
     if (!container) return;
 
     if (wpSelectedCategoryIds.length === 0) {
-        container.innerHTML = '<span style="font-size: 0.75rem; color: #64748B;">No categories selected. Pick from dropdown below.</span>';
+        container.innerHTML = '<span style="font-size: 0.75rem; color: #64748B;">No categories selected. Click "Select Top 20" or pick below.</span>';
         return;
     }
 
@@ -1995,10 +2091,15 @@ function renderSelectedCategories() {
 
 function renderSelectedTags() {
     const container = document.getElementById('wpSelectedTagsContainer');
+    const badge = document.getElementById('wpTagCountBadge');
+    if (badge) {
+        badge.textContent = `${wpSelectedTagIds.length} Selected`;
+        badge.className = wpSelectedTagIds.length >= 20 ? 'status-pill success' : 'status-pill primary';
+    }
     if (!container) return;
 
     if (wpSelectedTagIds.length === 0) {
-        container.innerHTML = '<span style="font-size: 0.75rem; color: #64748B;">No tags selected. Pick from dropdown below.</span>';
+        container.innerHTML = '<span style="font-size: 0.75rem; color: #64748B;">No tags selected. Click "Select Top 20" or pick below.</span>';
         return;
     }
 
@@ -2162,22 +2263,8 @@ function onWpKeywordChange(keyword) {
     const ctaUrlInput = document.getElementById('postCtaUrlInput');
     if (ctaUrlInput) ctaUrlInput.value = landingUrl;
 
-    // Auto-match categories in local state
-    if (wpAllCategories.length > 0) {
-        const matched = wpAllCategories.filter(c => {
-            const cn = c.name.toLowerCase();
-            if (kw.includes('intern') && (cn.includes('intern') || cn.includes('training'))) return true;
-            if ((kw.includes('app') || kw.includes('mobile')) && (cn.includes('app') || cn.includes('android'))) return true;
-            if ((kw.includes('bill') || kw.includes('pos')) && cn.includes('bill')) return true;
-            if ((kw.includes('web') || kw.includes('design')) && (cn.includes('web') || cn.includes('dynamic') || cn.includes('customized'))) return true;
-            if ((kw.includes('seo') || kw.includes('market')) && (cn.includes('seo') || cn.includes('market'))) return true;
-            return false;
-        }).map(c => c.id);
-        if (matched.length > 0) {
-            wpSelectedCategoryIds = matched.slice(0, 4);
-            renderSelectedCategories();
-        }
-    }
+    // Auto-match at least 20 categories and 20 tags
+    selectTaxonomiesForKeyword(keyword, 20);
 }
 
 function setWpFeaturedImage(url, label) {

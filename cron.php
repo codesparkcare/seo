@@ -168,6 +168,7 @@ if ($autoPublish && $lastAutoPublishDate !== $today) {
     $pass = $config['settings']['wp_rest_app_password'] ?? '';
 
     if (!empty($pass)) {
+        $taxMatch = getMatchingTaxonomiesForKeyword($chosenKw, 20);
         $ch = curl_init($wpUrl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -177,6 +178,8 @@ if ($autoPublish && $lastAutoPublishDate !== $today) {
             'excerpt' => $metaDescription,
             'content' => $content . $schemaScript,
             'status' => 'publish',
+            'categories' => $taxMatch['categories'],
+            'tags' => $taxMatch['tags'],
             'meta' => [
                 'rank_math_title' => $metaTitle,
                 'rank_math_description' => $metaDescription,

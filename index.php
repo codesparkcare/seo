@@ -884,8 +884,20 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
 
                     <!-- Selected Categories Badges -->
                     <div style="margin-bottom: 12px;">
-                        <label class="form-label" style="font-size: 0.8rem; margin-bottom: 6px; color: #cbd5e1;">Active WordPress Categories:</label>
-                        <div id="wpSelectedCategoriesContainer" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 32px; padding: 6px 10px; background: #070a13; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+                            <label class="form-label" style="font-size: 0.8rem; margin:0; color: #cbd5e1; display:flex; align-items:center; gap: 8px;">
+                                Active WordPress Categories: <span id="wpCategoryCountBadge" class="status-pill success" style="font-size: 0.7rem; padding: 2px 8px;">0 Selected</span>
+                            </label>
+                            <div style="display:flex; gap: 6px;">
+                                <button type="button" class="btn btn-outline btn-xs" onclick="selectTopCategories(20)" style="font-size: 0.7rem; padding: 2px 8px; color: #4ADE80; border-color: rgba(74, 222, 128, 0.35);">
+                                    <i class="fas fa-check-double"></i> Select Top 20
+                                </button>
+                                <button type="button" class="btn btn-outline btn-xs" onclick="clearAllCategories()" style="font-size: 0.7rem; padding: 2px 8px; color: #EF4444; border-color: rgba(239, 68, 68, 0.35);">
+                                    <i class="fas fa-times"></i> Clear
+                                </button>
+                            </div>
+                        </div>
+                        <div id="wpSelectedCategoriesContainer" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 36px; max-height: 120px; overflow-y: auto; padding: 8px 10px; background: #070a13; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
                             <span style="font-size: 0.75rem; color: #64748B;">Loading categories from codespark.online...</span>
                         </div>
                     </div>
@@ -907,9 +919,21 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                     </div>
 
                     <!-- Selected Tags Badges -->
-                    <div style="margin-top: 10px;">
-                        <label class="form-label" style="font-size: 0.8rem; margin-bottom: 6px; color: #cbd5e1;">Active WordPress Tags:</label>
-                        <div id="wpSelectedTagsContainer" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 32px; padding: 6px 10px; background: #070a13; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
+                    <div style="margin-top: 12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; flex-wrap: wrap; gap: 6px;">
+                            <label class="form-label" style="font-size: 0.8rem; margin:0; color: #cbd5e1; display:flex; align-items:center; gap: 8px;">
+                                Active WordPress Tags: <span id="wpTagCountBadge" class="status-pill success" style="font-size: 0.7rem; padding: 2px 8px;">0 Selected</span>
+                            </label>
+                            <div style="display:flex; gap: 6px;">
+                                <button type="button" class="btn btn-outline btn-xs" onclick="selectTopTags(20)" style="font-size: 0.7rem; padding: 2px 8px; color: #4ADE80; border-color: rgba(74, 222, 128, 0.35);">
+                                    <i class="fas fa-check-double"></i> Select Top 20
+                                </button>
+                                <button type="button" class="btn btn-outline btn-xs" onclick="clearAllTags()" style="font-size: 0.7rem; padding: 2px 8px; color: #EF4444; border-color: rgba(239, 68, 68, 0.35);">
+                                    <i class="fas fa-times"></i> Clear
+                                </button>
+                            </div>
+                        </div>
+                        <div id="wpSelectedTagsContainer" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 36px; max-height: 120px; overflow-y: auto; padding: 8px 10px; background: #070a13; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
                             <span style="font-size: 0.75rem; color: #64748B;">Loading tags from codespark.online...</span>
                         </div>
                     </div>
