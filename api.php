@@ -637,8 +637,8 @@ switch ($action) {
     // ==========================================
     case 'generate_local_pages':
         $biz = $config['business'] ?? [];
-        $services = !empty($params['services']) ? explode(',', $params['services']) : ['Software Development', 'Web Development', 'Mobile App Development', 'Billing Software'];
-        $locations = !empty($params['locations']) ? explode(',', $params['locations']) : ['Tirunelveli', 'Melapalayam', 'Palayamkottai', 'Tenkasi', 'Tuticorin'];
+        $services = !empty($params['services']) ? explode(',', $params['services']) : ['IT Company', 'Software Company', 'Website Developer', 'Mobile App Development', 'Free Internship For College Students', 'Free Cloud Server Provider', 'Play Store Console Provider', 'No.1 SEO Company'];
+        $locations = !empty($params['locations']) ? explode(',', $params['locations']) : ['Chennai', 'Madurai', 'Coimbatore', 'Tirunelveli', 'Tenkasi', 'Thoothukudi', 'Trichy', 'Salem'];
 
         $pages = [];
         foreach ($services as $srv) {

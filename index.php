@@ -555,8 +555,37 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
 
                 <div class="form-row" style="margin-bottom: 16px;">
                     <div class="form-group">
-                        <label class="form-label"><i class="fas fa-cogs" style="color: var(--secondary);"></i> Services (comma separated)</label>
-                        <input type="text" class="form-control" id="programmaticServices" value="Software Company, Mobile App Development, Billing Software, Web Design, Custom ERP Development">
+                        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                            <label class="form-label"><i class="fas fa-cogs" style="color: var(--secondary);"></i> Services / Focusing Keywords (comma separated)</label>
+                            <span style="font-size: 0.75rem; color: #3b82f6; font-weight: 500;"><i class="fas fa-key"></i> Focusing Keywords Synced</span>
+                        </div>
+                        <input type="text" class="form-control" id="programmaticServices" value="IT Company, Software Company, Website Developer, Mobile App Development, Free Internship For College Students, Free Cloud Server Provider, Android App Developer, Play Store Console Provider, SEO Company">
+                        
+                        <!-- Quick Service / Keyword Presets -->
+                        <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+                            <span style="font-size: 0.74rem; color: var(--text-muted); font-weight: 600;"><i class="fas fa-filter"></i> Presets:</span>
+                            <button type="button" class="btn btn-outline btn-xs" onclick="addServicePreset('IT Company, Software Company, Website Developer, Website Designer')">
+                                <i class="fas fa-laptop-code"></i> + IT & Web
+                            </button>
+                            <button type="button" class="btn btn-outline btn-xs" onclick="addServicePreset('Mobile App Development, Android App Developer, iOS App Developer, Play Store Console Provider')">
+                                <i class="fas fa-mobile-alt"></i> + Mobile Apps
+                            </button>
+                            <button type="button" class="btn btn-outline btn-xs" onclick="addServicePreset('Free Internship For College Students, Internship Training, Online Internship Software Development')">
+                                <i class="fas fa-graduation-cap"></i> + Internships
+                            </button>
+                            <button type="button" class="btn btn-outline btn-xs" onclick="addServicePreset('Free Cloud Server Provider, Free Hosting Provider, Cloud Server')">
+                                <i class="fas fa-server"></i> + Cloud
+                            </button>
+                            <button type="button" class="btn btn-outline btn-xs" onclick="addServicePreset('SEO Company, SEO Codespark, No.1 SEO Company')">
+                                <i class="fas fa-chart-line"></i> + SEO
+                            </button>
+                            <button type="button" class="btn btn-outline btn-xs" style="color: #60a5fa; border-color: rgba(96,165,250,0.4);" onclick="loadAllKeywordsToServices()">
+                                <i class="fas fa-sync-alt"></i> Load All Focusing Keywords
+                            </button>
+                            <button type="button" class="btn btn-outline btn-xs" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.4);" onclick="clearServices()">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
                     </div>
                     <div class="form-group">
                         <div style="display:flex; justify-content:space-between; align-items:baseline;">

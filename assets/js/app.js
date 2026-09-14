@@ -977,6 +977,45 @@ async function publishPageToWordPress(index, btn) {
     }
 }
 
+// Services & Focusing Keywords Presets Helpers
+function addServicePreset(services, replace = false) {
+    const input = document.getElementById('programmaticServices');
+    if (!input) return;
+    if (replace || !input.value.trim()) {
+        input.value = services;
+    } else {
+        const currentList = input.value.split(',').map(s => s.trim()).filter(Boolean);
+        const toAddList = services.split(',').map(s => s.trim()).filter(Boolean);
+        const merged = Array.from(new Set([...currentList, ...toAddList]));
+        input.value = merged.join(', ');
+    }
+    showToast('Services & focusing keywords updated!', 'info');
+}
+
+function clearServices() {
+    const input = document.getElementById('programmaticServices');
+    if (input) {
+        input.value = '';
+        input.focus();
+        showToast('Services cleared. Select presets or type your keywords.', 'info');
+    }
+}
+
+function loadAllKeywordsToServices() {
+    const profInput = document.getElementById('profKeywords');
+    let allKws = '';
+    if (profInput && profInput.value.trim()) {
+        allKws = profInput.value.trim();
+    } else {
+        allKws = 'IT Company, Software Company, Website Designer, Website Developer, Internship Training, Free Internship For College Students, Free Cloud Server Provider, Free Internship Training, Free Hosting Provider, Cloud Server, Mobile App Development, Mobile App Developer, Android App Developer, iOS App Developer, Play Store Console Provider, Online Internship Software Development, Near by IT Company, Near by Software Company, SEO Company, SEO Codespark, No.1 SEO Company, Top website development company, Billing Software, Custom Software Development';
+    }
+    const input = document.getElementById('programmaticServices');
+    if (input) {
+        input.value = allKws;
+        showToast('Loaded all focusing keywords into Services!', 'success');
+    }
+}
+
 // Location Presets Helpers
 function addLocationPreset(cities, replace = false) {
     const input = document.getElementById('programmaticLocations');
