@@ -1408,11 +1408,30 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
 
                     <!-- Step 4: Call to Action & Dedicated Button URL -->
                     <div style="background: rgba(66, 133, 244, 0.08); border: 1px solid rgba(66, 133, 244, 0.25); border-radius: var(--radius-sm); padding: 14px; margin-bottom: 18px;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                            <i class="fas fa-external-link-alt" style="color: #4285F4;"></i>
-                            <h4 style="margin: 0; font-size: 0.9rem; color: #93c5fd;">5. Call to Action Button & Destination URL</h4>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-external-link-alt" style="color: #4285F4;"></i>
+                                <h4 style="margin: 0; font-size: 0.9rem; color: #93c5fd;">5. Call to Action Button & Destination URL</h4>
+                            </div>
+                            <span style="font-size: 0.72rem; color: #94A3B8;">Target landing page / lead form to drive Google Maps visitors</span>
                         </div>
                         
+                        <!-- Select Target Landing Page / Form Dropdown (Matching First Image) -->
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #e2e8f0; display:flex; align-items:center; gap: 6px;">
+                                <i class="fas fa-link" style="color: #60a5fa;"></i> Select Destination Landing Page / Form
+                            </label>
+                            <select class="form-control" id="gmbLandingPageSelect" onchange="onGmbLandingPageSelectChange(this.value)" style="border-color: rgba(66, 133, 244, 0.5); background: rgba(15, 23, 42, 0.95); color: #fff;">
+                                <option value="https://codespark.online/best-website-design-for-your-business/">💻 Best Website Design (https://codespark.online/best-website-design-for-your-business/)</option>
+                                <option value="https://codespark.online/easy-billing-software/">🧾 Easy Billing Software (https://codespark.online/easy-billing-software/)</option>
+                                <option value="https://codespark.online/internship-for-students/">🎓 Internship for Students (https://codespark.online/internship-for-students/)</option>
+                                <option value="https://codespark.online/internship/">👨‍🎓 IT Career & Internship (https://codespark.online/internship/)</option>
+                                <option value="https://codespark.online/digital-marketing-for-your-business/">📈 Digital Marketing & SEO (https://codespark.online/digital-marketing-for-your-business/)</option>
+                                <option value="https://codespark.online/cloud-hosting-provider/">☁️ Cloud Hosting Provider (https://codespark.online/cloud-hosting-provider/)</option>
+                                <option value="https://codespark.online/contact/">📱 General Contact & Inquiries (https://codespark.online/contact/)</option>
+                            </select>
+                        </div>
+
                         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px; margin-bottom: 10px;">
                             <div>
                                 <label class="form-label" style="font-size: 0.78rem; font-weight: 600;">Button Type</label>
@@ -1425,25 +1444,28 @@ $isGoogleConnected = !empty($googleOAuth['is_connected']);
                                 </select>
                             </div>
                             <div>
-                                <label class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #fff;">Button URL (Where users land)</label>
-                                <input type="url" class="form-control" id="gmbButtonUrlInput" placeholder="https://codespark.online/services/" value="https://codespark.online/services/" oninput="updateGmbLivePreview()" style="border-color: rgba(66, 133, 244, 0.5);">
+                                <label class="form-label" style="font-size: 0.78rem; font-weight: 600; color: #fff;">Custom / Active Button URL</label>
+                                <input type="url" class="form-control" id="gmbButtonUrlInput" placeholder="https://codespark.online/best-website-design-for-your-business/" value="https://codespark.online/best-website-design-for-your-business/" oninput="onGmbButtonUrlInputChange(this.value)" style="border-color: rgba(66, 133, 244, 0.5);">
                             </div>
                         </div>
 
                         <!-- Quick suggestion chips for Button URL -->
                         <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                            <span style="font-size: 0.72rem; color: var(--text-dim);">Suggested URLs:</span>
-                            <button type="button" class="btn btn-outline btn-sm" onclick="setGmbButtonUrl('https://codespark.online/services/')" style="padding: 2px 8px; font-size: 0.7rem; border-color: rgba(255,255,255,0.15);">
-                                /services/
+                            <span style="font-size: 0.72rem; color: var(--text-dim);">Quick URLs:</span>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="setGmbButtonUrl('https://codespark.online/best-website-design-for-your-business/')" style="padding: 2px 8px; font-size: 0.7rem; border-color: rgba(255,255,255,0.15);">
+                                💻 Website Design
                             </button>
-                            <button type="button" class="btn btn-outline btn-sm" onclick="setGmbButtonUrl('https://codespark.online/')" style="padding: 2px 8px; font-size: 0.7rem; border-color: rgba(255,255,255,0.15);">
-                                Homepage
+                            <button type="button" class="btn btn-outline btn-sm" onclick="setGmbButtonUrl('https://codespark.online/easy-billing-software/')" style="padding: 2px 8px; font-size: 0.7rem; border-color: rgba(255,255,255,0.15);">
+                                🧾 Billing
                             </button>
-                            <button type="button" class="btn btn-outline btn-sm" onclick="setGmbButtonUrl('https://codespark.online/internship/')" style="padding: 2px 8px; font-size: 0.7rem; border-color: rgba(255,255,255,0.15);">
-                                /internship/
+                            <button type="button" class="btn btn-outline btn-sm" onclick="setGmbButtonUrl('https://codespark.online/internship-for-students/')" style="padding: 2px 8px; font-size: 0.7rem; border-color: rgba(255,255,255,0.15);">
+                                🎓 Internship
                             </button>
                             <button type="button" class="btn btn-outline btn-sm" onclick="setGmbButtonUrl('https://codespark.online/contact/')" style="padding: 2px 8px; font-size: 0.7rem; border-color: rgba(255,255,255,0.15);">
-                                /contact/
+                                📱 Contact
+                            </button>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="setGmbButtonUrl('https://codespark.online/services/')" style="padding: 2px 8px; font-size: 0.7rem; border-color: rgba(255,255,255,0.15);">
+                                /services/
                             </button>
                         </div>
                     </div>

@@ -1484,12 +1484,41 @@ function selectGmbPresetImage(url, el) {
     updateGmbLivePreview();
 }
 
+function onGmbLandingPageSelectChange(url) {
+    if (!url) return;
+    const input = document.getElementById('gmbButtonUrlInput');
+    if (input) {
+        input.value = url;
+        input.style.borderColor = '#34d399';
+        setTimeout(() => { input.style.borderColor = ''; }, 1000);
+    }
+    updateGmbLivePreview();
+}
+
+function onGmbButtonUrlInputChange(url) {
+    const select = document.getElementById('gmbLandingPageSelect');
+    if (select) {
+        const found = Array.from(select.options).some(opt => opt.value === url);
+        if (found) {
+            select.value = url;
+        }
+    }
+    updateGmbLivePreview();
+}
+
 function setGmbButtonUrl(url) {
     const input = document.getElementById('gmbButtonUrlInput');
     if (input) {
         input.value = url;
         input.style.borderColor = '#34d399';
         setTimeout(() => { input.style.borderColor = ''; }, 1000);
+    }
+    const select = document.getElementById('gmbLandingPageSelect');
+    if (select) {
+        const found = Array.from(select.options).some(opt => opt.value === url);
+        if (found) {
+            select.value = url;
+        }
     }
     updateGmbLivePreview();
 }
@@ -1531,8 +1560,8 @@ async function generateGmbUpdateWithGemini() {
                     }
                 });
             }
-            if (document.getElementById('gmbButtonUrlInput') && data.cta_url) {
-                document.getElementById('gmbButtonUrlInput').value = data.cta_url;
+            if (data.cta_url) {
+                setGmbButtonUrl(data.cta_url);
             }
             if (document.getElementById('gmbCtaTypeSelect') && data.cta_type) {
                 document.getElementById('gmbCtaTypeSelect').value = data.cta_type;

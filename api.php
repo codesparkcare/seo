@@ -1517,26 +1517,26 @@ Return ONLY JSON.";
             $topic = $presets[array_rand($presets)];
         }
 
-        // 1. Determine best curated HD image
+        // 1. Determine best curated HD image & landing URL
         $tLower = strtolower($topic);
         $imageUrl = 'https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?w=800&auto=format&fit=crop'; // default web dev
-        $suggestedCtaUrl = $website . '/services/';
+        $suggestedCtaUrl = 'https://codespark.online/best-website-design-for-your-business/';
 
         if (strpos($tLower, 'host') !== false || strpos($tLower, 'cloud') !== false || strpos($tLower, 'server') !== false) {
             $imageUrl = 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&auto=format&fit=crop';
-            $suggestedCtaUrl = $website . '/services/';
+            $suggestedCtaUrl = 'https://codespark.online/cloud-hosting-provider/';
         } elseif (strpos($tLower, 'intern') !== false || strpos($tLower, 'train') !== false || strpos($tLower, 'course') !== false || strpos($tLower, 'student') !== false || strpos($tLower, 'python') !== false) {
             $imageUrl = 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop';
-            $suggestedCtaUrl = $website . '/';
+            $suggestedCtaUrl = 'https://codespark.online/internship-for-students/';
         } elseif (strpos($tLower, 'app') !== false || strpos($tLower, 'mobile') !== false || strpos($tLower, 'android') !== false || strpos($tLower, 'ios') !== false) {
             $imageUrl = 'https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&auto=format&fit=crop';
-            $suggestedCtaUrl = $website . '/services/';
+            $suggestedCtaUrl = 'https://codespark.online/best-website-design-for-your-business/';
         } elseif (strpos($tLower, 'bill') !== false || strpos($tLower, 'pos') !== false || strpos($tLower, 'erp') !== false || strpos($tLower, 'invent') !== false) {
             $imageUrl = 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&auto=format&fit=crop';
-            $suggestedCtaUrl = $website . '/contact/';
+            $suggestedCtaUrl = 'https://codespark.online/easy-billing-software/';
         } elseif (strpos($tLower, 'seo') !== false || strpos($tLower, 'market') !== false || strpos($tLower, 'digital') !== false) {
             $imageUrl = 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop';
-            $suggestedCtaUrl = $website . '/services/';
+            $suggestedCtaUrl = 'https://codespark.online/digital-marketing-for-your-business/';
         }
 
         // Clean topic tag
@@ -1564,7 +1564,14 @@ Create an enticing, high-converting Google Maps 'What's New' update post.
 Include:
 1. An eye-catching headline (under 60 characters).
 2. A compelling body (2-3 short paragraphs, emoji bullet points, address, phone, and 4-6 local hashtags like #Tirunelveli #Codespark).
-3. Suggested CTA button URL.
+3. Suggested CTA button URL from one of these exact site landing pages:
+   - https://codespark.online/best-website-design-for-your-business/
+   - https://codespark.online/easy-billing-software/
+   - https://codespark.online/internship-for-students/
+   - https://codespark.online/internship/
+   - https://codespark.online/digital-marketing-for-your-business/
+   - https://codespark.online/cloud-hosting-provider/
+   - https://codespark.online/contact/
 
 Output ONLY valid JSON with keys:
 'headline': string
